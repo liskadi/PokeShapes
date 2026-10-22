@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Standard semantic feedback colors */
+  --match-exact-bg: rgba(16, 185, 129, 0.18);
+  --match-exact-border: #10b981;
+  --match-exact-text: #059669;
+
+  --match-partial-bg: rgba(245, 158, 11, 0.18);
+  --match-partial-border: #f59e0b;
+  --match-partial-text: #d97706;
+
+  --match-none-bg: rgba(244, 63, 94, 0.14);
+  --match-none-border: rgba(244, 63, 94, 0.45);
+  --match-none-text: #e11d48;
+
+  /* Mode accent colors */
+  --mode-circles: #38bdf8;
+  --mode-triangles: #f43f5e;
+  --mode-lines: #a855f7;
+}
+
+.dark {
+  --match-exact-bg: rgba(16, 185, 129, 0.2);
+  --match-exact-border: #10b981;
+  --match-exact-text: #34d399;
+
+  --match-partial-bg: rgba(245, 158, 11, 0.2);
+  --match-partial-border: #f59e0b;
+  --match-partial-text: #fbbf24;
+
+  --match-none-bg: rgba(244, 63, 94, 0.15);
+  --match-none-border: rgba(244, 63, 94, 0.4);
+  --match-none-text: #fb7185;
+}
+
+/* Color Blind Mode: Deuteranopia / Protanopia (Red-Green Safe -> Blue / Orange / Slate) */
+:root[data-cb-mode='deuteranopia'],
+.dark[data-cb-mode='deuteranopia'] {
+  --match-exact-bg: rgba(37, 99, 235, 0.24);
+  --match-exact-border: #3b82f6;
+  --match-exact-text: #60a5fa;
+
+  --match-partial-bg: rgba(234, 88, 12, 0.24);
+  --match-partial-border: #f97316;
+  --match-partial-text: #fb923c;
+
+  --match-none-bg: rgba(100, 116, 139, 0.2);
+  --match-none-border: #64748b;
+  --match-none-text: #94a3b8;
+
+  --mode-circles: #3b82f6;
+  --mode-triangles: #f59e0b;
+  --mode-lines: #a855f7;
+}
+
+.light[data-cb-mode='deuteranopia'] {
+  --match-exact-text: #1d4ed8;
+  --match-partial-text: #c2410c;
+  --match-none-text: #475569;
+}
+
+/* Color Blind Mode: Tritanopia (Blue-Yellow Safe -> Teal-Cyan / Magenta / Slate) */
+:root[data-cb-mode='tritanopia'],
+.dark[data-cb-mode='tritanopia'] {
+  --match-exact-bg: rgba(6, 182, 212, 0.24);
+  --match-exact-border: #06b6d4;
+  --match-exact-text: #22d3ee;
+
+  --match-partial-bg: rgba(217, 70, 239, 0.24);
+  --match-partial-border: #d946ef;
+  --match-partial-text: #e879f9;
+
+  --match-none-bg: rgba(100, 116, 139, 0.2);
+  --match-none-border: #64748b;
+  --match-none-text: #94a3b8;
+
+  --mode-circles: #06b6d4;
+  --mode-triangles: #ec4899;
+  --mode-lines: #8b5cf6;
+}
+
+.light[data-cb-mode='tritanopia'] {
+  --match-exact-text: #0e7490;
+  --match-partial-text: #a21caf;
+  --match-none-text: #475569;
+}
+
+/* Semantic Feedback Badge Utility Classes */
+.badge-exact {
+  background-color: var(--match-exact-bg);
+  border-color: var(--match-exact-border);
+  color: var(--match-exact-text);
+}
+
+.badge-partial {
+  background-color: var(--match-partial-bg);
+  border-color: var(--match-partial-border);
+  color: var(--match-partial-text);
+}
+
+.badge-none {
+  background-color: var(--match-none-bg);
+  border-color: var(--match-none-border);
+  color: var(--match-none-text);
+}
+
+/* Subtle gamer background grid */
+.bg-pokedex-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+}
+
+/* SVG Shape Reveal Animation */
+@keyframes svgShapePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-shapes-enabled g.shape-batch-new > * {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: svgShapePop 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Custom sleek scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
