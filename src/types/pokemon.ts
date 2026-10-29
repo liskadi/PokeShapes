@@ -11,9 +11,12 @@ export interface PokemonDetails {
   name: string;
   displayName: string;
   generation: number;
+  regionName: string; // e.g. "Kanto", "Sinnoh"
   types: string[]; // e.g. ["grass", "poison"]
   heightMeters: number; // converted from decimeters
   weightKg: number; // converted from hectograms
+  habitat: string; // e.g. "Grassland", "Forest", "Cave", "Waters-Edge"
+  genus?: string; // e.g. "Seed Pokémon"
   officialArtworkUrl: string; // from pokemon/sprites/other/official-artwork/front_default
   cryUrl?: string;
 }
@@ -27,9 +30,9 @@ export interface GuessComparison {
   generationDirection: DirectionHint; // 'higher' means Target Gen > Guessed Gen
   typesMatch: MatchStatus; // 'exact' if identical set, 'partial' if 1 shared type, 'none' otherwise
   sharedTypes: string[];
-  heightMatch: MatchStatus; // 'exact' if equal, 'partial' if within 0.3m
+  heightMatch: MatchStatus; // 'exact' if equal, 'partial' if within 0.4m
   heightDirection: DirectionHint; // 'higher' means Target is taller
-  weightMatch: MatchStatus; // 'exact' if equal, 'partial' if within 5kg
+  weightMatch: MatchStatus; // 'exact' if equal, 'partial' if within 8kg
   weightDirection: DirectionHint; // 'higher' means Target is heavier
   dexDirection: DirectionHint; // 'higher' means Target # > Guessed #
 }

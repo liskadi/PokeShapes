@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Eye,
+  Contrast,
   Moon,
   Palette,
   Settings,
@@ -9,7 +9,6 @@ import {
   Volume2,
   VolumeX,
   X,
-  Contrast,
 } from 'lucide-react';
 import { ColorBlindMode, UserSettings } from '../types/game';
 
@@ -219,44 +218,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             </div>
 
-            {/* Pokédex Attribute Hints */}
-            <div className="flex items-center justify-between gap-4 py-1.5">
-              <div className="flex items-start gap-3">
-                <Eye className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
-                <div>
-                  <div className="font-display font-bold text-sm text-slate-900 dark:text-white">
-                    Pokédex Attribute Clues
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    Show Generation, Type, Height & Weight comparison badges on each wrong guess
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={settings.showAttributeHints}
-                onClick={() =>
-                  onUpdateSettings({
-                    showAttributeHints: !settings.showAttributeHints,
-                  })
-                }
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                  settings.showAttributeHints
-                    ? 'bg-rose-500'
-                    : 'bg-slate-300 dark:bg-slate-700'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
-                    settings.showAttributeHints
-                      ? 'translate-x-5'
-                      : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-
             {/* Shape Pop-In Animations */}
             <div className="flex items-center justify-between gap-4 py-1.5">
               <div className="flex items-start gap-3">
@@ -266,7 +227,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     Animate Shape Additions
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400">
-                    Smoothly animate each new batch of +10 geometric shapes
+                    Smoothly animate each new batch of geometric shapes (+20 Circles, +10 Triangles, +25 Lines)
                   </div>
                 </div>
               </div>
@@ -301,10 +262,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 )}
                 <div>
                   <div className="font-display font-bold text-sm text-slate-900 dark:text-white">
-                    Pokédex Audio Chimes
+                    Pokédex Audio & Normalized Cries
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400">
-                    Play retro synthesized Pokédex sound effects on guesses and wins
+                    Play retro synthesized Pokédex sound effects and volume-normalized Pokémon cries on round completion
                   </div>
                 </div>
               </div>

@@ -1,12 +1,12 @@
 import { GameMode } from '../types/game';
 
 /**
- * PolyMon Epoch Date (Puzzle #1)
+ * PokéShapes Epoch Date (Puzzle #1 = 2026-09-22 so Archive has 30+ playable past days immediately)
  * Stored as UTC midnight components of local calendar date to avoid DST drift.
  */
 export const EPOCH_YEAR = 2026;
-export const EPOCH_MONTH = 10; // October (1-indexed)
-export const EPOCH_DAY = 21;
+export const EPOCH_MONTH = 9; // September (1-indexed)
+export const EPOCH_DAY = 22;
 export const TOTAL_MAINLINE_POKEMON = 1025;
 
 /**
@@ -17,6 +17,41 @@ export function getLocalDateKey(date: Date = new Date()): string {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+/**
+ * Returns the "YYYY-MM-DD" dateKey offset by `offsetDays` from `baseDateKey`.
+ * e.g., offsetDateKey("2026-10-22", -1) => "2026-10-21" (Yesterday).
+ */
+export function getOffsetDateKey(baseDateKey: string, offsetDays: number): string {
+  const utcMs = parseDateKeyToUtcMs(baseDateKey) + offsetDays * 86_400_000;
+  const d = new Date(utcMs);
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Generates a list of playable Archive dateKeys from today back to Epoch (up to `maxDays`).
+ */
+export function getArchiveDateKeys(
+  todayDateKey: string,
+  maxDays: number = 31
+): { dateKey: string; puzzleNumber: number; isToday: boolean; isYesterday: boolean }[] {
+  const todayIdx = getDayIndexFromEpoch(todayDateKey);
+  const count = Math.min(maxDays, todayIdx + 1);
+  const list = [];
+  for (let i = 0; i < count; i++) {
+    const dk = getOffsetDateKey(todayDateKey, -i);
+    list.push({
+      dateKey: dk,
+      puzzleNumber: getPuzzleNumber(dk),
+      isToday: i === 0,
+      isYesterday: i === 1,
+    });
+  }
+  return list;
 }
 
 /**
@@ -41,7 +76,7 @@ export function daysBetweenDateKeys(startKey: string, endKey: string): number {
 }
 
 /**
- * Returns the 0-based day index since the PolyMon Epoch (2026-10-21).
+ * Returns the 0-based day index since the PokéShapes Epoch.
  */
 export function getDayIndexFromEpoch(dateKey: string): number {
   const epochUtc = Date.UTC(EPOCH_YEAR, EPOCH_MONTH - 1, EPOCH_DAY);
@@ -122,9 +157,9 @@ export function getDailyTargets(
   const cycle = Math.floor(dayIndex / totalPokemon);
   const slot = dayIndex % totalPokemon;
 
-  const circlesDeck = buildShuffledDeck(`polymon-deck-v1:circles:cycle-${cycle}`, totalPokemon);
-  const trianglesDeck = buildShuffledDeck(`polymon-deck-v1:triangles:cycle-${cycle}`, totalPokemon);
-  const linesDeck = buildShuffledDeck(`polymon-deck-v1:lines:cycle-${cycle}`, totalPokemon);
+  const circlesDeck = buildShuffledDeck(`pokeshapes-deck-v1:circles:cycle-${cycle}`, totalPokemon);
+  const trianglesDeck = buildShuffledDeck(`pokeshapes-deck-v1:triangles:cycle-${cycle}`, totalPokemon);
+  const linesDeck = buildShuffledDeck(`pokeshapes-deck-v1:lines:cycle-${cycle}`, totalPokemon);
 
   const circlesId = circlesDeck[slot];
 
@@ -156,26 +191,5 @@ export function getGeometrizeSeed(
   mode: GameMode,
   pokemonId: number
 ): number {
-  return hashString(`polymon-geometrize-v1:${dateKey}:${mode}:pokemon-${pokemonId}`);
-}
-
-/**
- * Generates a random target Pokemon & seed for Practice / Unlimited Mode.
- */
-export function createPracticeTarget(excludeId?: number): {
-  pokemonId: number;
-  seed: number;
-  sessionKey: string;
-} {
-  let pokemonId = Math.floor(Math.random() * TOTAL_MAINLINE_POKEMON) + 1;
-  if (excludeId && pokemonId === excludeId) {
-    pokemonId = (pokemonId % TOTAL_MAINLINE_POKEMON) + 1;
-  }
-  const nonce = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const seed = hashString(`polymon-practice:${nonce}:${pokemonId}`);
-  return {
-    pokemonId,
-    seed,
-    sessionKey: `practice-${nonce}`,
-  };
+  return hashString(`pokeshapes-geometrize-v1:${dateKey}:${mode}:pokemon-${pokemonId}`);
 }

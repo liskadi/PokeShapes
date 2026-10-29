@@ -146,12 +146,12 @@ export const PokemonSearch: React.FC<PokemonSearchProps> = ({
           onKeyDown={handleKeyDown}
           placeholder={
             disabled
-              ? 'Round complete! Check your stats or switch shape modes above.'
+              ? 'Round complete!'
               : isIndexLoading
-              ? 'Loading Pokédex database from PokéAPI…'
-              : `Who's that Pokémon? (${guessesRemaining} ${
+              ? 'Loading Pokédex…'
+              : `Who's that Pokemon? (${guessesRemaining} ${
                   guessesRemaining === 1 ? 'guess' : 'guesses'
-                } left — wrong guess adds +10 shapes)`
+                } left)`
           }
           className="w-full bg-transparent text-sm sm:text-base font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
           aria-label="Search and guess a Pokémon"

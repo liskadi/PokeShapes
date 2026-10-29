@@ -1,28 +1,31 @@
-# PolyMon — Daily Geometric Pokémon Guessing Game
+# PokéShapes — Daily Geometric Pokémon Guessing Game
 
-**PolyMon** is a Wordle-inspired daily Pokémon guessing web application where players identify the daily mystery Pokémon from a progressive geometric primitive reconstruction of its official artwork.
+**PokéShapes** is a Wordle-inspired daily Pokémon guessing web application where players identify the daily mystery Pokémon from a progressive geometric primitive reconstruction of its official artwork.
 
 ## Features
 - **Three Daily Shape Game Modes** powered by [Tw1ddle/geometrize](https://github.com/Tw1ddle/geometrize) (`geometrizejs`):
   - **● Circles Mode** (`ShapeTypes.CIRCLE`)
   - **▲ Triangles Mode** (`ShapeTypes.TRIANGLE`)
-  - **╱ Lines Mode** (`ShapeTypes.LINE`)
-- **Progressive Shape Resolution (`15 → 105 Shapes`)**:
-  - Starts with **15 shapes**.
-  - Every wrong guess adds **+10 shapes** (`15, 25, 35, 45, 55, 65, 75, 85, 95, 105`) for up to **10 guesses**.
-  - Interactive **Shape Tier Scrubber** to inspect unlocked shape tiers and post-game **Official Artwork vs. Geometrized** blend slider.
-- **Deterministic Daily Puzzle Engine**:
-  - Synchronized to local midnight (`00:00:00`) with a live countdown timer and automatic midnight rollover detection.
-  - Uses a seeded `Mulberry32` PRNG + non-repeating **Fisher-Yates 1,025-Pokémon cycle deck** with a cross-mode collision guard so all 3 daily modes always pick 3 different Pokémon.
-  - Seeds the Web Worker hill-climbing algorithm so every player gets the exact same 105 shapes on any given day.
-- **PokéAPI v2 Integration**:
-  - Consumes [PokéAPI v2](https://pokeapi.co/docs/v2) (`sprites.other['official-artwork'].front_default`) across all 1,025 mainline Pokémon.
-- **Settings & Accessibility**:
-  - **Light / Dark Mode** (Cyber-Pokédex Dark UI & Silph Co. Light UI).
-  - **Color Blind Mode** (**Standard**, **Deuteranopia/Protanopia Safe**, and **Tritanopia Safe** palettes paired with explicit directional/symbolic icons).
-  - **High-Contrast Scanner Backdrop**, **Pokédex Attribute Clues Toggle**, **Shape Animation Toggle**, and **Web Audio Pokédex Chimes**.
-- **Trainer Statistics & Streaks**:
-  - Tracks **Played**, **Win %**, **Current Streak 🔥**, **Max Streak 🏆**, **Triple Crown Days 👑**, and **1–10 Guess Distribution** across Overall and individual Shape Modes, plus one-click **Wordle-style Emoji Result Sharing**.
+  - **╱ Lines Mode** (`ShapeTypes.LINE` — with tuned thicker stroke rasterization)
+- **Per-Mode Progressive Shape Resolution (10 Guesses)**:
+  - **● Circles**: Starts at **40 shapes**, adds **+20 shapes** per wrong guess (`40 → 220 shapes`).
+  - **▲ Triangles**: Starts at **20 shapes**, adds **+10 shapes** per wrong guess (`20 → 110 shapes`).
+  - **╱ Lines**: Starts at **50 shapes**, adds **+25 shapes** per wrong guess (`50 → 275 shapes`).
+  - Interactive **Shape Tier Scrubber** to inspect unlocked shape tiers and **Give Up / Reveal Pokémon** option.
+- **Progressive Pokédex Scanner Clues**:
+  - **3 Guesses**: Unlocks **Generation Hint** (`Gen I – Gen IX` & Region).
+  - **5 Guesses**: Unlocks **Primary Type Hint**.
+  - **7 Guesses**: Unlocks **Habitat Hint**.
+- **Post-Game Timelapse Replay, SVG/PNG Export & Normalized Cry Audio**:
+  - Watch a shape-by-shape **Timelapse Replay**, blend between Geometry and the Original Artwork, listen to the **RMS Volume-Normalized Official Pokémon Cry**, and download your daily geometric portrait as a scalable **SVG** or **`1024×1024` PNG**.
+- **Yesterday's Champions & Past Daily Archive Picker**:
+  - View yesterday's 3 daily Pokémon answers and replay any past daily puzzle from the **Archive** without affecting your PolyDex, Trainer Rank, Statistics, or Daily Streaks.
+- **Personal "PolyDex" Collection, Final Geometry Viewer & Trainer Ranks**:
+  - Track every Pokémon you catch on Today's Daily Puzzles across Circles (`●`), Triangles (`▲`), and Lines (`╱`) modes, view all 7 available **Trainer Ranks** (*Rookie Scanner* to *Grand Master*), and click any caught Pokémon to inspect its **final geometry** across all 3 shape modes!
+- **Alpha Bounding-Box Auto-Crop & Idle Background Pre-Generation**:
+  - Automatically crops transparent sprite margins so every Pokémon fills **88% of the `180×180` bitmap** before geometrization, and pre-generates sibling daily modes in the background for `0ms` tab switching.
+- **Settings, Accessibility & Rich Emoji Sharing**:
+  - **Light / Dark Mode**, **Color Blind Palettes** (*Standard*, *Deuteranopia/Protanopia*, *Tritanopia*), and **Richer Emoji Grid Sharing** (`🟩🟨🔼🔽⬛` per-guess attribute matrix + shape tier counts).
 
 ## Getting Started
 
@@ -36,3 +39,4 @@ See the [`docs/`](./docs/) directory:
 - [`docs/IMPLEMENTATION_PLAN.md`](./docs/IMPLEMENTATION_PLAN.md)
 - [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 - [`docs/GAME_DESIGN.md`](./docs/GAME_DESIGN.md)
+- [`docs/COMPETITIVE_RESEARCH_AND_IMPROVEMENTS.md`](./docs/COMPETITIVE_RESEARCH_AND_IMPROVEMENTS.md)

@@ -1,5 +1,5 @@
 import * as GeometrizePkg from 'geometrizejs';
-import { GameMode, INITIAL_SHAPES, MAX_SHAPES } from '../types/game';
+import { GameMode, getModeShapeConfig } from '../types/game';
 import { mulberry32 } from '../utils/dailySeed';
 
 // Support both ESM and CommonJS interop from geometrizejs across Vite dev & build
@@ -36,18 +36,20 @@ function createRgbaInt(r: number, g: number, b: number, a: number = 255): number
 }
 
 /**
- * Enhances raw SVG shape markup exported by Geometrize SvgExporter:
- * - For Lines mode (`<line .../>`), upgrades 1px hairline strokes into bold,
- *   expressive rounded geometric brush strokes (`stroke-width="4.5" stroke-linecap="round"`).
- * - Adds `vector-effect="non-scaling-stroke"` avoidance so shapes scale proportionally with SVG viewBox.
+ * 3.3 Thicker Line Rasterization Tuning for Lines Mode (50 -> 275 lines):
+ * Upgrades 1px hairline strokes from SvgExporter into graduated, high-impact
+ * rounded vector brush strokes:
+ * - Foundational silhouette strokes (0..49): 5.8px stroke-width
+ * - Mid-tier structural strokes (50..149): 4.2px stroke-width
+ * - Fine detail strokes (150..274): 3.0px stroke-width
  */
 function enhanceSvgShape(rawSvg: string, mode: GameMode, stepIndex: number): string {
   if (mode === 'lines') {
-    // Earlier strokes slightly thicker to establish silhouette, later strokes finer for detail
-    const strokeWidth = stepIndex < 25 ? '5.2' : stepIndex < 65 ? '4.2' : '3.4';
+    const strokeWidth =
+      stepIndex < 50 ? '5.8' : stepIndex < 150 ? '4.2' : '3.0';
     return rawSvg.replace(
       'stroke-width="1"',
-      `stroke-width="${strokeWidth}" stroke-linecap="round"`
+      `stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"`
     );
   }
   return rawSvg;
@@ -62,15 +64,17 @@ self.onmessage = (event: MessageEvent<GeometrizeWorkerRequest>) => {
     height,
     rgbaBuffer,
     bgColor = [15, 23, 42],
-    initialShapes = INITIAL_SHAPES,
-    totalShapes = MAX_SHAPES,
   } = event.data;
+
+  const modeCfg = getModeShapeConfig(mode);
+  const initialShapes = event.data.initialShapes ?? modeCfg.initialShapes;
+  const totalShapes = event.data.totalShapes ?? modeCfg.maxShapes;
 
   const originalRandom = Math.random;
 
   try {
     // Install deterministic Mulberry32 PRNG over Math.random so hill-climbing
-    // produces the exact same 105 shapes for every player on the same day!
+    // produces the exact same shapes for every player on the same day!
     const seededRng = mulberry32(seed);
     Math.random = seededRng;
 
@@ -94,18 +98,19 @@ self.onmessage = (event: MessageEvent<GeometrizeWorkerRequest>) => {
       lines: ShapeTypes.LINE,
     };
 
+    // 3.3 Tuned candidate & mutation counts for Lines Mode vs Circles/Triangles
     const options =
       mode === 'lines'
         ? {
             shapeTypes: [shapeTypeMap[mode]],
-            alpha: 225,
+            alpha: 235,
             candidateShapesPerStep: 75,
             shapeMutationsPerStep: 110,
           }
         : {
             shapeTypes: [shapeTypeMap[mode]],
-            alpha: 178,
-            candidateShapesPerStep: 55,
+            alpha: 180,
+            candidateShapesPerStep: 60,
             shapeMutationsPerStep: 95,
           };
 
@@ -117,7 +122,7 @@ self.onmessage = (event: MessageEvent<GeometrizeWorkerRequest>) => {
       const enhancedSvg = enhanceSvgShape(rawSvg, mode, i);
       shapes.push(enhancedSvg);
 
-      // Stream the initial 15 shapes immediately so the game is playable right away
+      // Stream the initial shapes immediately so the game is playable right away
       if (i + 1 === initialShapes) {
         const msg: GeometrizeWorkerResponse = {
           jobId,
@@ -127,7 +132,11 @@ self.onmessage = (event: MessageEvent<GeometrizeWorkerRequest>) => {
           height,
         };
         self.postMessage(msg);
-      } else if (i + 1 > initialShapes && (i + 1 - initialShapes) % 20 === 0 && i + 1 < totalShapes) {
+      } else if (
+        i + 1 > initialShapes &&
+        (i + 1 - initialShapes) % modeCfg.increment === 0 &&
+        i + 1 < totalShapes
+      ) {
         const msg: GeometrizeWorkerResponse = {
           jobId,
           type: 'PROGRESS',

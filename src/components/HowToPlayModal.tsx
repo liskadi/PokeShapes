@@ -7,12 +7,7 @@ import {
   Target,
   X,
 } from 'lucide-react';
-import {
-  INITIAL_SHAPES,
-  MAX_GUESSES,
-  MAX_SHAPES,
-  SHAPES_PER_WRONG_GUESS,
-} from '../types/game';
+import { MAX_GUESSES } from '../types/game';
 
 interface HowToPlayModalProps {
   isOpen: boolean;
@@ -44,11 +39,8 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                 id="howto-modal-title"
                 className="font-display font-extrabold text-lg text-slate-900 dark:text-white"
               >
-                How to Play PolyMon
+                How to Play PokéShapes
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Daily Geometric Pokémon Identification Protocol
-              </p>
             </div>
           </div>
 
@@ -65,7 +57,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
         {/* Content */}
         <div className="p-6 overflow-y-auto space-y-5 text-sm text-slate-600 dark:text-slate-300">
           <p className="leading-relaxed">
-            Welcome to <strong className="text-slate-900 dark:text-white">PolyMon</strong>!
+            Welcome to <strong className="text-slate-900 dark:text-white">PokéShapes</strong>!
             Your mission is to identify the mystery Pokémon of the day from its{' '}
             <strong className="text-rose-500">geometrized official artwork</strong>{' '}
             within <strong className="text-slate-900 dark:text-white">{MAX_GUESSES} guesses</strong>.
@@ -87,21 +79,27 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                 <div className="font-display font-bold text-slate-900 dark:text-white">
                   Circles
                 </div>
-                <div className="text-[10px] text-slate-500">Layered Orbs</div>
+                <div className="text-[10px] font-mono text-slate-500">
+                  Start 40 (+20)
+                </div>
               </div>
               <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
                 <div className="text-rose-500 font-bold text-base mb-0.5">▲</div>
                 <div className="font-display font-bold text-slate-900 dark:text-white">
                   Triangles
                 </div>
-                <div className="text-[10px] text-slate-500">Low-Poly Mesh</div>
+                <div className="text-[10px] font-mono text-slate-500">
+                  Start 20 (+10)
+                </div>
               </div>
               <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
                 <div className="text-purple-500 font-bold text-base mb-0.5">╱</div>
                 <div className="font-display font-bold text-slate-900 dark:text-white">
                   Lines
                 </div>
-                <div className="text-[10px] text-slate-500">Vector Strokes</div>
+                <div className="text-[10px] font-mono text-slate-500">
+                  Start 50 (+25)
+                </div>
               </div>
             </div>
           </div>
@@ -114,22 +112,23 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
             </div>
             <ul className="space-y-1.5 text-xs list-disc list-inside text-slate-600 dark:text-slate-300">
               <li>
-                Each game begins with an abstract image made of only{' '}
-                <strong className="font-mono text-rose-500">
-                  {INITIAL_SHAPES} shapes
-                </strong>
-                .
+                <strong>Circles Mode</strong> starts at{' '}
+                <strong className="font-mono text-sky-500">40 shapes</strong> and
+                adds <strong className="font-mono text-sky-500">+20</strong> per
+                wrong guess (up to <span className="font-mono">220</span> shapes).
               </li>
               <li>
-                Every wrong guess adds{' '}
-                <strong className="font-mono text-rose-500">
-                  +{SHAPES_PER_WRONG_GUESS} shapes
-                </strong>{' '}
-                to sharpen the Pokémon&apos;s silhouette and colors:
-                <div className="mt-1.5 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-[11px] text-center text-slate-700 dark:text-slate-300">
-                  15 → 25 → 35 → 45 → 55 → 65 → 75 → 85 → 95 → {MAX_SHAPES}{' '}
-                  Shapes
-                </div>
+                <strong>Triangles Mode</strong> starts at{' '}
+                <strong className="font-mono text-rose-500">20 shapes</strong> and
+                adds <strong className="font-mono text-rose-500">+10</strong> per
+                wrong guess (up to <span className="font-mono">110</span> shapes).
+              </li>
+              <li>
+                <strong>Lines Mode</strong> starts at{' '}
+                <strong className="font-mono text-purple-500">50 shapes</strong>{' '}
+                and adds{' '}
+                <strong className="font-mono text-purple-500">+25</strong> per
+                wrong guess (up to <span className="font-mono">275</span> shapes).
               </li>
               <li>
                 Use the <strong>Shape Tier Scrubber</strong> below the scanner
@@ -138,29 +137,30 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
             </ul>
           </div>
 
-          {/* Daily Refresh & Pokédex Hints */}
+          {/* Scanner Clues & PolyDex / Archive */}
           <div className="grid sm:grid-cols-2 gap-3 text-xs">
             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-1.5 font-display font-bold text-slate-900 dark:text-white mb-1">
                 <Target className="w-4 h-4 text-emerald-500" />
-                <span>Pokédex Attribute Clues</span>
+                <span>Pokédex Scanner Clues</span>
               </div>
               <p className="text-slate-500 dark:text-slate-400">
-                Wrong guesses also reveal whether the mystery Pokémon shares
-                types, generation, or is taller/heavier (can be toggled off in
-                Settings for Pure Shape Hard Mode).
+                Progressive Scanner Clues unlock at{' '}
+                <strong>3 guesses</strong> (Generation),{' '}
+                <strong>5 guesses</strong> (Primary Type), and{' '}
+                <strong>7 guesses</strong> (Habitat).
               </p>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-1.5 font-display font-bold text-slate-900 dark:text-white mb-1">
                 <Calendar className="w-4 h-4 text-amber-500" />
-                <span>Daily Midnight Reset</span>
+                <span>PolyDex & Past Archive</span>
               </div>
               <p className="text-slate-500 dark:text-slate-400">
-                A new set of 3 daily Pokémon puzzles unlocks every night at{' '}
-                <strong>00:00 (Midnight)</strong>. Want extra practice? Switch
-                to <strong>Unlimited Mode</strong> anytime!
+                Catch today&apos;s daily Pokémon to rank up and unlock their final
+                geometry in your <strong>PolyDex</strong>! Replay past days in the{' '}
+                <strong>Archive</strong> anytime (archive games don&apos;t affect stats).
               </p>
             </div>
           </div>
@@ -170,7 +170,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
             onClick={onClose}
             className="w-full py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-display font-bold text-sm shadow-lg shadow-rose-500/25 transition-all"
           >
-            Start Scanning Pokémon!
+            Start Guessing Pokémon!
           </button>
         </div>
       </div>

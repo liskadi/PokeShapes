@@ -1,11 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadArtworkBitmapBytes } from '../api/pokeapi';
-import { GameMode, INITIAL_SHAPES, MAX_SHAPES } from '../types/game';
+import { GameMode, getModeShapeConfig } from '../types/game';
 import { getCachedShapes, setCachedShapes } from '../utils/storage';
 import type {
   GeometrizeWorkerRequest,
   GeometrizeWorkerResponse,
 } from '../workers/geometrize.worker';
+
+export interface BackgroundPrewarmTask {
+  dateKey: string;
+  mode: GameMode;
+  pokemonId: number;
+  officialArtworkUrl: string;
+  seed: number;
+}
 
 interface UseGeometrizeParams {
   dateKey: string;
@@ -13,19 +21,23 @@ interface UseGeometrizeParams {
   pokemonId: number;
   officialArtworkUrl: string | null;
   seed: number;
+  backgroundTasks?: BackgroundPrewarmTask[];
 }
 
 interface UseGeometrizeResult {
   shapes: string[];
   canvasSize: number;
+  croppedArtworkDataUrl: string | null;
   isInitialLoading: boolean;
   isBackgroundComputing: boolean;
   error: string | null;
   retry: () => void;
 }
 
-const TARGET_CANVAS_SIZE = 180;
-const RUNNER_BG_COLOR: [number, number, number] = [15, 23, 42];
+export const TARGET_CANVAS_SIZE = 180;
+export const RUNNER_BG_COLOR: [number, number, number] = [15, 23, 42];
+// Bump cache prefix to v4 for updated Circles shape counts (Circles 220, Triangles 110, Lines 275)
+export const CACHE_VERSION = 'v4';
 
 export function useGeometrize({
   dateKey,
@@ -33,51 +45,75 @@ export function useGeometrize({
   pokemonId,
   officialArtworkUrl,
   seed,
+  backgroundTasks = [],
 }: UseGeometrizeParams): UseGeometrizeResult {
   const [shapes, setShapes] = useState<string[]>([]);
+  const [croppedArtworkDataUrl, setCroppedArtworkDataUrl] = useState<
+    string | null
+  >(null);
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
-  const [isBackgroundComputing, setIsBackgroundComputing] = useState<boolean>(false);
+  const [isBackgroundComputing, setIsBackgroundComputing] =
+    useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
 
   const workerRef = useRef<Worker | null>(null);
+  const bgWorkerRef = useRef<Worker | null>(null);
+  const [activeCompleteTick, setActiveCompleteTick] = useState<number>(0);
 
+  // Primary active mode pipeline
   useEffect(() => {
     if (!officialArtworkUrl || !pokemonId) {
       return;
     }
 
     let cancelled = false;
-    const cacheKey = `${dateKey}:${mode}:${pokemonId}:${seed}`;
+    const modeCfg = getModeShapeConfig(mode);
+    const cacheKey = `${CACHE_VERSION}:${dateKey}:${mode}:${pokemonId}:${seed}`;
     const jobId = `${cacheKey}:${Date.now()}`;
 
     setShapes([]);
+    setCroppedArtworkDataUrl(null);
     setIsInitialLoading(true);
     setIsBackgroundComputing(false);
     setError(null);
 
     async function runPipeline() {
-      // 1. Check IndexedDB cache first
-      const cached = await getCachedShapes(cacheKey);
-      if (cancelled) return;
-
-      if (cached && cached.length >= MAX_SHAPES) {
-        setShapes(cached);
-        setIsInitialLoading(false);
-        setIsBackgroundComputing(false);
-        return;
-      }
-
-      // 2. Load official artwork PNG and extract RGBA byte buffer
       try {
-        const { width, height, rgbaBytes } = await loadArtworkBitmapBytes(
+        // 1. Always compute the auto-cropped artwork data URL & RGBA bytes
+        const bitmapDataPromise = loadArtworkBitmapBytes(
           officialArtworkUrl!,
           TARGET_CANVAS_SIZE,
           RUNNER_BG_COLOR
         );
+
+        // 2. Check IndexedDB cache in parallel
+        const cached = await getCachedShapes(cacheKey);
         if (cancelled) return;
 
-        // Terminate any previous worker job
+        if (cached && cached.length >= modeCfg.maxShapes) {
+          setShapes(cached);
+          setIsInitialLoading(false);
+          setIsBackgroundComputing(false);
+          // Populate cropped overlay for post-game slider
+          bitmapDataPromise
+            .then((res) => {
+              if (!cancelled) setCroppedArtworkDataUrl(res.croppedArtworkDataUrl);
+            })
+            .catch(() => {});
+          setActiveCompleteTick((t) => t + 1);
+          return;
+        }
+
+        const {
+          width,
+          height,
+          rgbaBytes,
+          croppedArtworkDataUrl: croppedUrl,
+        } = await bitmapDataPromise;
+        if (cancelled) return;
+        setCroppedArtworkDataUrl(croppedUrl);
+
         if (workerRef.current) {
           workerRef.current.terminate();
           workerRef.current = null;
@@ -91,7 +127,11 @@ export function useGeometrize({
 
         worker.onmessage = (event: MessageEvent<GeometrizeWorkerResponse>) => {
           if (cancelled || event.data.jobId !== jobId) return;
-          const { type, shapes: workerShapes, error: workerError } = event.data;
+          const {
+            type,
+            shapes: workerShapes,
+            error: workerError,
+          } = event.data;
 
           if (type === 'INITIAL_READY') {
             setShapes(workerShapes);
@@ -103,7 +143,8 @@ export function useGeometrize({
             setShapes(workerShapes);
             setIsInitialLoading(false);
             setIsBackgroundComputing(false);
-            setCachedShapes(cacheKey, workerShapes, dateKey);
+            setCachedShapes(cacheKey, workerShapes, `${CACHE_VERSION}:${dateKey}`);
+            setActiveCompleteTick((t) => t + 1);
             worker.terminate();
             if (workerRef.current === worker) {
               workerRef.current = null;
@@ -131,8 +172,8 @@ export function useGeometrize({
           height,
           rgbaBuffer: bufferCopy,
           bgColor: RUNNER_BG_COLOR,
-          initialShapes: INITIAL_SHAPES,
-          totalShapes: MAX_SHAPES,
+          initialShapes: modeCfg.initialShapes,
+          totalShapes: modeCfg.maxShapes,
         };
 
         worker.postMessage(req, [bufferCopy]);
@@ -157,9 +198,113 @@ export function useGeometrize({
     };
   }, [dateKey, mode, pokemonId, officialArtworkUrl, seed, retryCount]);
 
+  /**
+   * 3.2 Idle Background Pre-Generation for All 3 Daily Modes:
+   * Once the active tab finishes generating its shapes (`activeCompleteTick` increments),
+   * sequentially pre-generate and cache any un-cached sibling daily modes in the background
+   * so switching between Circles, Triangles, and Lines is 0ms instantaneous!
+   */
+  useEffect(() => {
+    if (isInitialLoading || isBackgroundComputing || backgroundTasks.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function prewarmNext() {
+      for (const task of backgroundTasks) {
+        if (cancelled) return;
+        const taskCfg = getModeShapeConfig(task.mode);
+        const bgCacheKey = `${CACHE_VERSION}:${task.dateKey}:${task.mode}:${task.pokemonId}:${task.seed}`;
+        const existing = await getCachedShapes(bgCacheKey);
+        if (cancelled) return;
+        if (existing && existing.length >= taskCfg.maxShapes) {
+          continue; // Already cached!
+        }
+
+        try {
+          const { width, height, rgbaBytes } = await loadArtworkBitmapBytes(
+            task.officialArtworkUrl,
+            TARGET_CANVAS_SIZE,
+            RUNNER_BG_COLOR
+          );
+          if (cancelled) return;
+
+          await new Promise<void>((resolve) => {
+            const bgWorker = new Worker(
+              new URL('../workers/geometrize.worker.ts', import.meta.url),
+              { type: 'module' }
+            );
+            bgWorkerRef.current = bgWorker;
+            const jobId = `bg:${bgCacheKey}:${Date.now()}`;
+
+            bgWorker.onmessage = (
+              event: MessageEvent<GeometrizeWorkerResponse>
+            ) => {
+              if (cancelled || event.data.jobId !== jobId) return;
+              if (event.data.type === 'COMPLETE') {
+                setCachedShapes(
+                  bgCacheKey,
+                  event.data.shapes,
+                  `${CACHE_VERSION}:${task.dateKey}`
+                );
+                bgWorker.terminate();
+                if (bgWorkerRef.current === bgWorker) {
+                  bgWorkerRef.current = null;
+                }
+                resolve();
+              } else if (event.data.type === 'ERROR') {
+                bgWorker.terminate();
+                if (bgWorkerRef.current === bgWorker) {
+                  bgWorkerRef.current = null;
+                }
+                resolve();
+              }
+            };
+
+            bgWorker.onerror = () => {
+              bgWorker.terminate();
+              if (bgWorkerRef.current === bgWorker) {
+                bgWorkerRef.current = null;
+              }
+              resolve();
+            };
+
+            const bufferCopy = rgbaBytes.buffer.slice(0);
+            const req: GeometrizeWorkerRequest = {
+              jobId,
+              mode: task.mode,
+              seed: task.seed,
+              width,
+              height,
+              rgbaBuffer: bufferCopy,
+              bgColor: RUNNER_BG_COLOR,
+              initialShapes: taskCfg.initialShapes,
+              totalShapes: taskCfg.maxShapes,
+            };
+            bgWorker.postMessage(req, [bufferCopy]);
+          });
+        } catch {
+          // Ignore background prewarm error
+        }
+      }
+    }
+
+    prewarmNext();
+
+    return () => {
+      cancelled = true;
+      if (bgWorkerRef.current) {
+        bgWorkerRef.current.terminate();
+        bgWorkerRef.current = null;
+      }
+    };
+  }, [activeCompleteTick, isInitialLoading, isBackgroundComputing, backgroundTasks]);
+
   return {
     shapes,
     canvasSize: TARGET_CANVAS_SIZE,
+    croppedArtworkDataUrl,
     isInitialLoading,
     isBackgroundComputing,
     error,

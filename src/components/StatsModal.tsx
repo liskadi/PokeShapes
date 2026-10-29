@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Award,
   BarChart3,
   Check,
   Clock,
@@ -14,10 +13,9 @@ import {
   AllStats,
   DailyGameState,
   GameMode,
-  INITIAL_SHAPES,
+  getModeShapeConfig,
   MAX_GUESSES,
   ModeStats,
-  SHAPES_PER_WRONG_GUESS,
 } from '../types/game';
 
 interface StatsModalProps {
@@ -75,12 +73,14 @@ export const StatsModal: React.FC<StatsModalProps> = ({
 
   const maxDistributionVal = Math.max(1, ...displayStats.guessDistribution);
 
-  // Highlight today's winning guess count bar if viewing a specific mode that was won today
   const todayModeWinGuessCount =
     selectedTab !== 'all' && dailyState.modes[selectedTab].status === 'won'
       ? dailyState.modes[selectedTab].guesses.length
       : null;
 
+  /**
+   * Emoji Grid Sharing
+   */
   const handleShareResults = () => {
     const modeMeta: { mode: GameMode; icon: string; name: string }[] = [
       { mode: 'circles', icon: '🔵', name: 'Circles' },
@@ -88,35 +88,42 @@ export const StatsModal: React.FC<StatsModalProps> = ({
       { mode: 'lines', icon: '⚡', name: 'Lines' },
     ];
 
-    const lines = modeMeta.map(({ mode, icon, name }) => {
+    const sections: string[] = [];
+
+    for (const { mode, icon, name } of modeMeta) {
       const mState = dailyState.modes[mode];
+      const shapeCfg = getModeShapeConfig(mode);
       if (mState.status === 'playing' && mState.guesses.length === 0) {
-        return `${icon} ${name}: Not played yet`;
+        sections.push(`${icon} ${name}: ⬜ Not played`);
+        continue;
       }
-      const blocks = mState.guesses
-        .map((g) => (g.comparison.isCorrect ? '🟩' : '🟥'))
-        .join('');
+
       const wrongCount = mState.guesses.filter(
         (g) => !g.comparison.isCorrect
       ).length;
-      const finalShapes =
-        INITIAL_SHAPES + wrongCount * SHAPES_PER_WRONG_GUESS;
+      const finalShapes = Math.min(
+        shapeCfg.maxShapes,
+        shapeCfg.initialShapes + wrongCount * shapeCfg.increment
+      );
 
       const scoreStr =
         mState.status === 'won'
           ? `${mState.guesses.length}/${MAX_GUESSES} (${finalShapes} shapes)`
           : mState.status === 'lost'
-          ? `X/${MAX_GUESSES}`
+          ? `X/${MAX_GUESSES} (${finalShapes} shapes)`
           : `${mState.guesses.length}/${MAX_GUESSES} (in progress)`;
 
-      return `${icon} ${name}: ${scoreStr} ${blocks}`;
-    });
+      const emojiBar = mState.guesses
+        .map((g) => (g.comparison.isCorrect ? '🟩' : '🟥'))
+        .join('');
+      sections.push(`${icon} ${name}: ${scoreStr}\n${emojiBar}`);
+    }
 
     const shareText = [
-      `PolyMon Daily #${dailyState.puzzleNumber} (${dailyState.dateKey})`,
-      ...lines,
-      `🔥 Daily Streak: ${stats.dailyOverallStreak}`,
-    ].join('\n');
+      `PokéShapes Daily #${dailyState.puzzleNumber} (${dailyState.dateKey})`,
+      ...sections,
+      `🔥 Daily Streak: ${stats.dailyOverallStreak} | 👑 Triple Crowns: ${stats.tripleCrownDays}`,
+    ].join('\n\n');
 
     navigator.clipboard.writeText(shareText).then(() => {
       setCopied(true);
@@ -232,37 +239,32 @@ export const StatsModal: React.FC<StatsModalProps> = ({
           </div>
 
           {/* Triple Crown Achievement Banner */}
-          <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-purple-500/10 border border-amber-500/25 px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
+          <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-purple-500/10 border border-amber-500/25 px-4 py-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
               <Crown className="w-5 h-5 text-amber-500 shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <div className="text-xs font-display font-bold text-slate-900 dark:text-white">
                   Triple Crown Days (All 3 Shape Modes Solved)
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                <div className="text-[10px] leading-tight text-slate-500 dark:text-slate-400 pr-2">
                   Catch the daily Pokémon in Circles, Triangles & Lines on the same day
                 </div>
               </div>
             </div>
-            <span className="font-mono font-extrabold text-lg text-amber-500 px-2.5 py-0.5 rounded-lg bg-amber-500/15">
+            <span className="font-mono font-extrabold text-lg text-amber-500 px-2.5 py-0.5 rounded-lg bg-amber-500/15 shrink-0">
               {stats.tripleCrownDays}
             </span>
           </div>
 
           {/* Guess Distribution Chart (1 to 10) */}
           <div>
-            <h3 className="font-display font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center justify-between">
-              <span>Guess Distribution (1 – 10 Guesses)</span>
-              <span className="font-mono text-[11px] normal-case">
-                15 → 105 Shapes
-              </span>
+            <h3 className="font-display font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
+              Guess Distribution (1 – 10 Guesses)
             </h3>
 
             <div className="space-y-1.5">
               {displayStats.guessDistribution.map((count, index) => {
                 const guessNum = index + 1;
-                const shapesAtGuess =
-                  INITIAL_SHAPES + index * SHAPES_PER_WRONG_GUESS;
                 const widthPercent = Math.max(
                   7,
                   Math.round((count / maxDistributionVal) * 100)
@@ -274,11 +276,8 @@ export const StatsModal: React.FC<StatsModalProps> = ({
                     key={guessNum}
                     className="flex items-center gap-2 text-xs font-mono"
                   >
-                    <span className="w-5 text-right font-bold text-slate-600 dark:text-slate-400">
+                    <span className="w-6 text-right font-bold text-slate-600 dark:text-slate-400">
                       {guessNum}
-                    </span>
-                    <span className="w-14 text-[10px] text-slate-400 dark:text-slate-500">
-                      ({shapesAtGuess}sh)
                     </span>
                     <div className="flex-1 bg-slate-100 dark:bg-slate-800/70 rounded-lg overflow-hidden h-6 p-0.5">
                       <div
@@ -308,7 +307,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
               </div>
               <div>
                 <div className="text-[11px] uppercase tracking-wider font-bold text-slate-400">
-                  Next Daily PolyMon
+                  Next Daily PokéShapes
                 </div>
                 <div className="font-mono font-extrabold text-xl text-slate-900 dark:text-white">
                   {countdownFormatted}
@@ -324,12 +323,12 @@ export const StatsModal: React.FC<StatsModalProps> = ({
               {copied ? (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>Copied Daily Summary!</span>
+                  <span>Copied Results!</span>
                 </>
               ) : (
                 <>
                   <Share2 className="w-4 h-4" />
-                  <span>Share Daily Results</span>
+                  <span>Share Results</span>
                 </>
               )}
             </button>

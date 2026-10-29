@@ -2,11 +2,9 @@ import React from 'react';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import {
   GameMode,
-  INITIAL_SHAPES,
+  getModeShapeConfig,
   MAX_GUESSES,
-  MAX_SHAPES,
   ModeGameState,
-  SHAPES_PER_WRONG_GUESS,
 } from '../types/game';
 
 interface ModeSelectorProps {
@@ -28,7 +26,7 @@ const MODES: ModeConfig[] = [
   {
     id: 'circles',
     label: 'Circles',
-    subtitle: 'Orb Primitives',
+    subtitle: '40 → 220 Shapes',
     accentClass: 'text-sky-500 dark:text-sky-400',
     activeBorderClass:
       'border-sky-500 bg-sky-500/10 dark:bg-sky-500/15 shadow-lg shadow-sky-500/10',
@@ -43,7 +41,7 @@ const MODES: ModeConfig[] = [
   {
     id: 'triangles',
     label: 'Triangles',
-    subtitle: 'Poly Shards',
+    subtitle: '20 → 110 Shapes',
     accentClass: 'text-rose-500 dark:text-rose-400',
     activeBorderClass:
       'border-rose-500 bg-rose-500/10 dark:bg-rose-500/15 shadow-lg shadow-rose-500/10',
@@ -57,7 +55,7 @@ const MODES: ModeConfig[] = [
   {
     id: 'lines',
     label: 'Lines',
-    subtitle: 'Vector Strokes',
+    subtitle: '50 → 275 Shapes',
     accentClass: 'text-purple-500 dark:text-purple-400',
     activeBorderClass:
       'border-purple-500 bg-purple-500/10 dark:bg-purple-500/15 shadow-lg shadow-purple-500/10',
@@ -90,6 +88,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
     >
       {MODES.map((m) => {
         const state = modesState[m.id];
+        const shapeCfg = getModeShapeConfig(m.id);
         const isActive = activeMode === m.id;
         const wrongCount = state.guesses.filter(
           (g) => !g.comparison.isCorrect
@@ -97,10 +96,10 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         const shapesCount =
           state.status === 'playing'
             ? Math.min(
-                MAX_SHAPES,
-                INITIAL_SHAPES + wrongCount * SHAPES_PER_WRONG_GUESS
+                shapeCfg.maxShapes,
+                shapeCfg.initialShapes + wrongCount * shapeCfg.increment
               )
-            : MAX_SHAPES;
+            : shapeCfg.maxShapes;
 
         return (
           <button

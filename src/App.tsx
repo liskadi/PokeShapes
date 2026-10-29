@@ -1,10 +1,22 @@
 import React, { useMemo, useState } from 'react';
+import {
+  Calendar,
+  Coffee,
+  Github,
+  HelpCircle,
+  History,
+  Mail,
+} from 'lucide-react';
+import { ArchiveModal } from './components/ArchiveModal';
+import { FaqModal } from './components/FaqModal';
 import { GeometrizeCanvas } from './components/GeometrizeCanvas';
 import { GuessList } from './components/GuessList';
 import { Header } from './components/Header';
 import { HowToPlayModal } from './components/HowToPlayModal';
 import { ModeSelector } from './components/ModeSelector';
 import { PokemonSearch } from './components/PokemonSearch';
+import { PolyDexModal } from './components/PolyDexModal';
+import { ScannerClues } from './components/ScannerClues';
 import { SettingsModal } from './components/SettingsModal';
 import { StatsModal } from './components/StatsModal';
 import { useDailyGame } from './hooks/useDailyGame';
@@ -31,19 +43,26 @@ export function App() {
   const {
     activeMode,
     selectMode,
-    playCategory,
-    selectPlayCategory,
+    selectedDailyDateKey,
+    selectArchiveDate,
     dailyState,
     currentModeState,
     targetPokemon,
+    targetDetailsMap,
+    yesterdayDateKey,
+    yesterdayPuzzleNumber,
+    yesterdayTargets,
+    backgroundPrewarmTasks,
     pokemonIndex,
     isIndexLoading,
     unlockedShapeCount,
+    wrongGuessesCount,
     guessesRemaining,
     isSubmittingGuess,
     submitGuess,
-    startNewPracticePuzzle,
+    giveUpCurrentGame,
     stats,
+    polyDex,
   } = useDailyGame({
     currentDateKey,
     soundEnabled: settings.soundEnabled,
@@ -52,6 +71,7 @@ export function App() {
   const {
     shapes,
     canvasSize,
+    croppedArtworkDataUrl,
     isInitialLoading,
     isBackgroundComputing,
     error,
@@ -62,6 +82,7 @@ export function App() {
     pokemonId: currentModeState.targetPokemonId,
     officialArtworkUrl: targetPokemon?.officialArtworkUrl || null,
     seed: currentModeState.geometrizeSeed,
+    backgroundTasks: backgroundPrewarmTasks,
   });
 
   // Modals state
@@ -70,6 +91,9 @@ export function App() {
   );
   const [isStatsOpen, setIsStatsOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isArchiveOpen, setIsArchiveOpen] = useState<boolean>(false);
+  const [isPolyDexOpen, setIsPolyDexOpen] = useState<boolean>(false);
+  const [isFaqOpen, setIsFaqOpen] = useState<boolean>(false);
 
   const handleCloseHowToPlay = () => {
     markOnboardingSeen();
@@ -87,22 +111,27 @@ export function App() {
     selectMode(nextMode);
   };
 
+  const isArchiveDate = selectedDailyDateKey !== currentDateKey;
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-[#090D16] text-slate-900 dark:text-slate-100 transition-colors">
       {/* Top Navigation Header */}
       <Header
         puzzleNumber={dailyState.puzzleNumber}
         dateKey={dailyState.dateKey}
+        isArchiveDate={isArchiveDate}
         countdownFormatted={countdownFormatted}
         dailyStreak={stats.dailyOverallStreak}
-        playCategory={playCategory}
-        onSelectCategory={selectPlayCategory}
+        polyDexCount={Object.keys(polyDex).length}
         theme={settings.theme}
         onToggleTheme={() =>
           updateSettings({
             theme: settings.theme === 'dark' ? 'light' : 'dark',
           })
         }
+        onSelectToday={() => selectArchiveDate(currentDateKey)}
+        onOpenArchive={() => setIsArchiveOpen(true)}
+        onOpenPolyDex={() => setIsPolyDexOpen(true)}
         onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
         onOpenStats={() => setIsStatsOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -122,29 +151,46 @@ export function App() {
         </div>
       )}
 
+      {/* Past Daily Archive Active Banner */}
+      {isArchiveDate && (
+        <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+          <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5">
+              <History className="w-3.5 h-3.5" />
+              <span>
+                Playing Past Archive Puzzle:{' '}
+                <strong>
+                  Daily #{dailyState.puzzleNumber} ({dailyState.dateKey})
+                </strong>
+              </span>
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsArchiveOpen(true)}
+                className="px-2.5 py-0.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 font-semibold transition-colors"
+              >
+                Browse Archive
+              </button>
+              <button
+                type="button"
+                onClick={() => selectArchiveDate(currentDateKey)}
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-rose-500 text-white font-bold hover:bg-rose-600 transition-colors"
+              >
+                <Calendar className="w-3 h-3" />
+                <span>Return to Today</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content Container */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-5 sm:py-7 space-y-5">
         {/* 3 Shape Game Modes Selector (Circles, Triangles, Lines) */}
         <ModeSelector
           activeMode={activeMode}
-          modesState={
-            playCategory === 'daily'
-              ? dailyState.modes
-              : {
-                  circles:
-                    activeMode === 'circles'
-                      ? currentModeState
-                      : dailyState.modes.circles,
-                  triangles:
-                    activeMode === 'triangles'
-                      ? currentModeState
-                      : dailyState.modes.triangles,
-                  lines:
-                    activeMode === 'lines'
-                      ? currentModeState
-                      : dailyState.modes.lines,
-                }
-          }
+          modesState={dailyState.modes}
           onSelectMode={selectMode}
         />
 
@@ -154,10 +200,11 @@ export function App() {
           <div className="lg:col-span-6">
             <GeometrizeCanvas
               mode={activeMode}
-              playCategory={playCategory}
               status={currentModeState.status}
+              gaveUp={currentModeState.gaveUp}
               shapes={shapes}
               canvasSize={canvasSize}
+              croppedArtworkDataUrl={croppedArtworkDataUrl}
               unlockedShapeCount={unlockedShapeCount}
               guessesUsed={currentModeState.guesses.length}
               isInitialLoading={isInitialLoading || !targetPokemon}
@@ -167,14 +214,21 @@ export function App() {
               targetPokemon={targetPokemon}
               highContrastCanvas={settings.highContrastCanvas}
               animateShapes={settings.animateShapes}
+              onGiveUp={giveUpCurrentGame}
               onOpenStats={() => setIsStatsOpen(true)}
               onNextMode={handleNextMode}
-              onNewPracticePuzzle={() => startNewPracticePuzzle(activeMode)}
             />
           </div>
 
-          {/* Right Column: Search Combobox & Guess Log */}
+          {/* Right Column: Scanner Clues, Search Combobox & Guess Log */}
           <div className="lg:col-span-6 space-y-4">
+            {/* 2.1 Progressive Scanner Clues (3 Wrong = Gen, 5 Wrong = Primary Type, 7 Wrong = Habitat + Official Cry) */}
+            <ScannerClues
+              wrongGuessesCount={wrongGuessesCount}
+              status={currentModeState.status}
+              targetPokemon={targetPokemon}
+            />
+
             <PokemonSearch
               pokemonIndex={pokemonIndex}
               isIndexLoading={isIndexLoading}
@@ -190,47 +244,89 @@ export function App() {
             />
 
             <GuessList
+              mode={activeMode}
               guesses={currentModeState.guesses}
-              showAttributeHints={settings.showAttributeHints}
             />
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200/70 dark:border-slate-800/70 py-4 px-4 text-center text-xs text-slate-500 dark:text-slate-400">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div>
-            <strong className="font-display text-slate-700 dark:text-slate-300">
-              PolyMon
-            </strong>{' '}
-            — Daily Geometric Pokémon Guessing Game
-          </div>
-          <div className="flex items-center gap-3">
-            <span>
+      <footer className="border-t border-slate-200/70 dark:border-slate-800/70 py-5 px-4 text-xs text-slate-500 dark:text-slate-400 bg-white/40 dark:bg-slate-950/40">
+        <div className="max-w-5xl mx-auto space-y-3">
+          {/* Top Row: Left Project Version/Year, Center Action Buttons, Right Geometrize Credit */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+            {/* Left: Project Name - Version - Year */}
+            <div className="font-display font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+              PokéShapes - v1.0.0 - 2026
+            </div>
+
+            {/* Center: Action Icon Buttons with Hover Text */}
+            <div className="flex items-center justify-center gap-2">
+              <a
+                href="mailto:?subject=Pok%C3%A9Shapes%20Feedback%20%26%20Bugs"
+                title="Feedback & Bugs"
+                aria-label="Feedback & Bugs"
+                className="inline-flex items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/50 dark:hover:border-rose-500/50 text-slate-700 dark:text-slate-300 hover:text-rose-500 dark:hover:text-rose-400 transition-all shadow-2xs"
+              >
+                <Mail className="w-4 h-4" />
+              </a>
+
+              <a
+                href="#github"
+                onClick={(e) => e.preventDefault()}
+                title="Github"
+                aria-label="Github"
+                className="inline-flex items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/50 dark:hover:border-rose-500/50 text-slate-700 dark:text-slate-300 hover:text-rose-500 dark:hover:text-rose-400 transition-all shadow-2xs"
+              >
+                <Github className="w-4 h-4" />
+              </a>
+
+              <a
+                href="#kofi"
+                onClick={(e) => e.preventDefault()}
+                title="Ko-Fi"
+                aria-label="Ko-Fi"
+                className="inline-flex items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/50 dark:hover:border-rose-500/50 text-slate-700 dark:text-slate-300 hover:text-rose-500 dark:hover:text-rose-400 transition-all shadow-2xs"
+              >
+                <Coffee className="w-4 h-4" />
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setIsFaqOpen(true)}
+                title="FAQ"
+                aria-label="FAQ"
+                className="inline-flex items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/50 dark:hover:border-rose-500/50 text-slate-700 dark:text-slate-300 hover:text-rose-500 dark:hover:text-rose-400 transition-all shadow-2xs cursor-pointer"
+              >
+                <HelpCircle className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Right: Powered by geometrize */}
+            <div className="whitespace-nowrap">
               Powered by{' '}
               <a
                 href="https://github.com/Tw1ddle/geometrize"
                 target="_blank"
                 rel="noreferrer"
-                className="underline hover:text-rose-500 transition-colors"
+                className="underline hover:text-rose-500 transition-colors font-semibold"
               >
-                Tw1ddle/geometrize
+                geometrize
               </a>
-            </span>
-            <span>•</span>
-            <span>
-              Sprites via{' '}
-              <a
-                href="https://pokeapi.co/docs/v2"
-                target="_blank"
-                rel="noreferrer"
-                className="underline hover:text-rose-500 transition-colors"
-              >
-                PokéAPI v2
-              </a>
-            </span>
+            </div>
           </div>
+
+          {/* Bottom Row: Legal & Trademark Disclaimer */}
+          <p className="text-[11px] leading-relaxed text-center text-slate-400 dark:text-slate-500 max-w-4xl mx-auto">
+            PokéShapes is an unofficial fan-made project and is not affiliated with,
+            endorsed, sponsored, or approved by Nintendo, Creatures Inc., GAME
+            FREAK inc., or The Pokémon Company. We do not own or claim any rights
+            to any Pokémon names, images, audio, or trademarks. All Pokémon
+            properties and references are copyright of their respective owners
+            and are used strictly for non-commercial, informational, and
+            educational purposes only.
+          </p>
         </div>
       </footer>
 
@@ -238,6 +334,10 @@ export function App() {
       <HowToPlayModal
         isOpen={isHowToPlayOpen}
         onClose={handleCloseHowToPlay}
+      />
+      <FaqModal
+        isOpen={isFaqOpen}
+        onClose={() => setIsFaqOpen(false)}
       />
       <StatsModal
         isOpen={isStatsOpen}
@@ -252,6 +352,23 @@ export function App() {
         onClose={() => setIsSettingsOpen(false)}
         settings={settings}
         onUpdateSettings={updateSettings}
+      />
+      <ArchiveModal
+        isOpen={isArchiveOpen}
+        onClose={() => setIsArchiveOpen(false)}
+        todayDateKey={currentDateKey}
+        selectedDateKey={selectedDailyDateKey}
+        onSelectArchiveDate={selectArchiveDate}
+        yesterdayDateKey={yesterdayDateKey}
+        yesterdayPuzzleNumber={yesterdayPuzzleNumber}
+        yesterdayTargets={yesterdayTargets}
+        targetDetailsMap={targetDetailsMap}
+      />
+      <PolyDexModal
+        isOpen={isPolyDexOpen}
+        onClose={() => setIsPolyDexOpen(false)}
+        polyDex={polyDex}
+        pokemonIndex={pokemonIndex}
       />
     </div>
   );
