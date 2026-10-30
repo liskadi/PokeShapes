@@ -123,6 +123,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
       `PokéShapes Daily #${dailyState.puzzleNumber} (${dailyState.dateKey})`,
       ...sections,
       `🔥 Daily Streak: ${stats.dailyOverallStreak} | 👑 Triple Crowns: ${stats.tripleCrownDays}`,
+      `https://pokeshapes.com`,
     ].join('\n\n');
 
     navigator.clipboard.writeText(shareText).then(() => {

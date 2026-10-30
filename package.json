@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --port 4173 --host",
+    "qa:tunnel": "npx --yes cloudflared tunnel --url http://localhost:4173",
+    "qa:cloudflare": "npm run build && npx --yes wrangler pages deploy dist --project-name pokeshapes-qa"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.3",

@@ -1,0 +1,3 @@
+# PokéShapes (pokeshapes.com) - Authorized Digital Sellers (ads.txt)
+# Replace the placeholder line below with your publisher line once approved by Google AdSense, Playwire, or NitroPay:
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

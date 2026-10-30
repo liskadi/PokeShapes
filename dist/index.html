@@ -2,19 +2,88 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PokéShapes — Daily Geometric Pokémon Guessing Game</title>
+
+    <!-- Primary SEO Meta Tags -->
+    <meta
+      name="description"
+      content="Play PokéShapes! Guess the daily mystery Pokémon hidden behind geometric Circles, Triangles, and Lines. Every wrong guess adds more shapes to make the picture clearer."
+    />
+    <meta
+      name="keywords"
+      content="PokeShapes, PokéShapes, daily pokemon game, pokemon guessing game, whos that pokemon, geometrize pokemon, pokedle, squirdle, pokemon puzzle"
+    />
+    <meta name="author" content="PokéShapes" />
+    <meta name="theme-color" content="#0C1220" />
+    <link rel="canonical" href="https://pokeshapes.com/" />
+
+    <!-- Icons & Web App Manifest -->
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./favicon.svg" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+
+    <!-- OpenGraph / Discord / Facebook Preview -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PokéShapes" />
+    <meta property="og:url" content="https://pokeshapes.com/" />
+    <meta
+      property="og:title"
+      content="PokéShapes — Who's That Geometric Pokémon?"
+    />
+    <meta
+      property="og:description"
+      content="Three daily mystery Pokémon hidden behind Circles, Triangles, and Lines. Can you spot them in 10 guesses?"
+    />
+    <meta property="og:image" content="https://pokeshapes.com/og-preview.svg" />
+
+    <!-- Twitter / X Card Preview -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://pokeshapes.com/" />
+    <meta
+      name="twitter:title"
+      content="PokéShapes — Daily Geometric Pokémon Guessing Game"
+    />
+    <meta
+      name="twitter:description"
+      content="Three daily mystery Pokémon hidden behind Circles, Triangles, and Lines. Can you spot them in 10 guesses?"
+    />
+    <meta
+      name="twitter:image"
+      content="https://pokeshapes.com/og-preview.svg"
+    />
+
+    <!-- Structured Data (JSON-LD VideoGame / WebApplication Schema) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "PokéShapes",
+        "url": "https://pokeshapes.com/",
+        "description": "Daily geometric Pokémon guessing game where players identify mystery Pokémon reconstructed from Circles, Triangles, and Lines.",
+        "genre": ["Puzzle", "Trivia", "Daily Wordle-style Game"],
+        "playMode": "SinglePlayer",
+        "applicationCategory": "Game",
+        "operatingSystem": "Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/assets/index-BeVWegNp.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BPVXVLpN.css">
+    <script type="module" crossorigin src="./assets/index-ChaLgrav.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CP_hjOOy.css">
   </head>
-  <body class=" antialiased selection:bg-rose-500 selection:text-white">
+  <body class="antialiased selection:bg-rose-500 selection:text-white">
     <div id="root"></div>
   </body>
 </html>

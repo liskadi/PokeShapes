@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0C1220" />
+      <stop offset="100%" stop-color="#141C2F" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E11D48" />
+      <stop offset="50%" stop-color="#F43F5E" />
+      <stop offset="100%" stop-color="#FBBF24" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="14" fill="url(#accent)" />
+
+  <!-- Decorative Geometric Shapes -->
+  <circle cx="1040" cy="150" r="110" fill="#38BDF8" opacity="0.12" />
+  <polygon points="1080,340 1170,510 960,510" fill="#F43F5E" opacity="0.14" />
+  <line x1="880" y1="540" x2="1120" y2="300" stroke="#A855F7" stroke-width="18" stroke-linecap="round" opacity="0.18" />
+
+  <!-- Card Frame -->
+  <rect x="80" y="90" width="1040" height="450" rx="40" fill="#11182B" stroke="#2E4066" stroke-width="4" />
+
+  <!-- Geometric Pokéball Emblem -->
+  <g transform="translate(150, 175) scale(2.1)">
+    <rect x="-12" y="-12" width="124" height="124" rx="28" fill="#0B101D" stroke="#334770" stroke-width="3" />
+    <polygon points="50,6 88,24 95,48 5,48 12,24" fill="#FF385C" />
+    <polygon points="50,6 88,24 50,48" fill="#FDA4AF" opacity="0.45" />
+    <polygon points="5,52 95,52 88,76 50,94 12,76" fill="#F8FAFC" />
+    <polygon points="50,32 66,41 66,59 50,68 34,59 34,41" fill="#0F172A" />
+    <circle cx="50" cy="50" r="10" fill="#38BDF8" />
+    <circle cx="47" cy="47" r="3.5" fill="#E0F2FE" />
+  </g>
+
+  <!-- Brand Typography -->
+  <text x="455" y="255" font-family="system-ui, -apple-system, sans-serif" font-size="86" font-weight="900" fill="#FFFFFF" letter-spacing="1">
+    POKÉ<tspan fill="#F43F5E">SHAPES</tspan>
+  </text>
+
+  <text x="458" y="315" font-family="system-ui, -apple-system, sans-serif" font-size="30" font-weight="600" fill="#94A3B8">
+    Daily Geometric Pokémon Guessing Game
+  </text>
+
+  <!-- 3 Mode Pills -->
+  <g transform="translate(458, 360)">
+    <rect x="0" y="0" width="180" height="56" rx="18" fill="#0C192E" stroke="#38BDF8" stroke-width="2.5" />
+    <text x="90" y="36" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="800" fill="#38BDF8">● Circles</text>
+
+    <rect x="200" y="0" width="205" height="56" rx="18" fill="#28111E" stroke="#F43F5E" stroke-width="2.5" />
+    <text x="302" y="36" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="800" fill="#F43F5E">▲ Triangles</text>
+
+    <rect x="425" y="0" width="170" height="56" rx="18" fill="#1E1333" stroke="#A855F7" stroke-width="2.5" />
+    <text x="510" y="36" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="800" fill="#C084FC">╱ Lines</text>
+  </g>
+
+  <!-- Domain URL Footer -->
+  <text x="458" y="475" font-family="monospace" font-size="26" font-weight="700" fill="#FBBF24">
+    pokeshapes.com
+  </text>
+</svg>

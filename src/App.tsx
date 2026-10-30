@@ -270,8 +270,9 @@ export function App() {
               </a>
 
               <a
-                href="#github"
-                onClick={(e) => e.preventDefault()}
+                href="https://github.com/liskadi/PokeShapes"
+                target="_blank"
+                rel="noreferrer"
                 title="Github"
                 aria-label="Github"
                 className="btn-tactile inline-flex items-center justify-center p-2 rounded-xl bg-slate-100 dark:bg-[#1C2842] border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] hover:border-rose-500 text-slate-700 dark:text-slate-100 hover:text-rose-500 dark:hover:text-rose-400"
