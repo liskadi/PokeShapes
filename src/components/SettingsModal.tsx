@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  Check,
   Contrast,
   Moon,
   Palette,
+  RotateCcw,
   Settings,
   Sparkles,
   Sun,
@@ -17,6 +19,7 @@ interface SettingsModalProps {
   onClose: () => void;
   settings: UserSettings;
   onUpdateSettings: (partial: Partial<UserSettings>) => void;
+  onResetAllData: () => Promise<void> | void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -24,7 +27,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   settings,
   onUpdateSettings,
+  onResetAllData,
 }) => {
+  const [confirmingReset, setConfirmingReset] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+
   if (!isOpen) return null;
 
   const colorBlindOptions: {
@@ -52,6 +59,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       swatches: ['#06B6D4', '#D946EF', '#64748B'],
     },
   ];
+
+  const handleConfirmReset = async () => {
+    await onResetAllData();
+    setConfirmingReset(false);
+    setResetSuccess(true);
+    setTimeout(() => setResetSuccess(false), 2500);
+  };
 
   return (
     <div
@@ -83,7 +97,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             aria-label="Close Settings"
           >
             <X className="w-5 h-5" />
@@ -101,7 +115,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <button
                 type="button"
                 onClick={() => onUpdateSettings({ theme: 'dark' })}
-                className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${
+                className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
                   settings.theme === 'dark'
                     ? 'border-rose-500 bg-rose-500/10 text-slate-900 dark:text-white'
                     : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
@@ -117,7 +131,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <button
                 type="button"
                 onClick={() => onUpdateSettings({ theme: 'light' })}
-                className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${
+                className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
                   settings.theme === 'light'
                     ? 'border-rose-500 bg-rose-500/10 text-slate-900 dark:text-white'
                     : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
@@ -148,7 +162,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     onClick={() =>
                       onUpdateSettings({ colorBlindMode: option.id })
                     }
-                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border-2 text-left transition-all ${
+                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
                       isSelected
                         ? 'border-rose-500 bg-rose-500/10'
                         : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
@@ -180,7 +194,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* 3. Toggle Switches */}
           <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-            {/* High-Contrast Scanner Canvas */}
+            {/* High-Contrast Scanner Backdrop */}
             <div className="flex items-center justify-between gap-4 py-1.5">
               <div className="flex items-start gap-3">
                 <Contrast className="w-5 h-5 text-sky-500 mt-0.5 shrink-0" />
@@ -288,6 +302,55 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   }`}
                 />
               </button>
+            </div>
+          </div>
+
+          {/* 4. Reset All Game Data */}
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0D1322] border border-slate-200 dark:border-[#243454]">
+              <div>
+                <div className="font-display font-bold text-sm text-slate-900 dark:text-white">
+                  Reset Game Data
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Clear your daily puzzle progress, streaks, statistics, and PolyDex catches on this device.
+                </div>
+              </div>
+
+              <div className="shrink-0 flex items-center gap-2">
+                {resetSuccess ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-display font-bold badge-exact border-2">
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    <span>Data Reset!</span>
+                  </span>
+                ) : !confirmingReset ? (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingReset(true)}
+                    className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-display font-bold bg-slate-100 hover:bg-rose-500/15 dark:bg-[#1C2842] dark:hover:bg-rose-500/20 text-slate-700 hover:text-rose-600 dark:text-slate-200 dark:hover:text-rose-300 border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reset Data</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleConfirmReset}
+                      className="btn-tactile inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-display font-bold bg-rose-600 hover:bg-rose-500 border-rose-400 border-b-rose-800 text-white cursor-pointer"
+                    >
+                      <span>Confirm Reset</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingReset(false)}
+                      className="btn-tactile px-2.5 py-1.5 rounded-xl text-xs font-display font-bold bg-slate-200 dark:bg-[#1C2842] border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] text-slate-700 dark:text-slate-200 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

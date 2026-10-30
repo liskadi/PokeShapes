@@ -1,12 +1,12 @@
 import { GameMode } from '../types/game';
 
 /**
- * PokéShapes Epoch Date (Puzzle #1 = 2026-09-22 so Archive has 30+ playable past days immediately)
+ * PokéShapes Epoch Date (Puzzle #1 = 2026-10-26 so 2026-10-30 starts on Day 5 with Days 1-4 in Archive)
  * Stored as UTC midnight components of local calendar date to avoid DST drift.
  */
 export const EPOCH_YEAR = 2026;
-export const EPOCH_MONTH = 9; // September (1-indexed)
-export const EPOCH_DAY = 22;
+export const EPOCH_MONTH = 10; // October (1-indexed)
+export const EPOCH_DAY = 26;
 export const TOTAL_MAINLINE_POKEMON = 1025;
 
 /**
@@ -157,9 +157,9 @@ export function getDailyTargets(
   const cycle = Math.floor(dayIndex / totalPokemon);
   const slot = dayIndex % totalPokemon;
 
-  const circlesDeck = buildShuffledDeck(`pokeshapes-deck-v1:circles:cycle-${cycle}`, totalPokemon);
-  const trianglesDeck = buildShuffledDeck(`pokeshapes-deck-v1:triangles:cycle-${cycle}`, totalPokemon);
-  const linesDeck = buildShuffledDeck(`pokeshapes-deck-v1:lines:cycle-${cycle}`, totalPokemon);
+  const circlesDeck = buildShuffledDeck(`pokeshapes-deck-v2:circles:cycle-${cycle}`, totalPokemon);
+  const trianglesDeck = buildShuffledDeck(`pokeshapes-deck-v2:triangles:cycle-${cycle}`, totalPokemon);
+  const linesDeck = buildShuffledDeck(`pokeshapes-deck-v2:lines:cycle-${cycle}`, totalPokemon);
 
   const circlesId = circlesDeck[slot];
 
@@ -191,5 +191,5 @@ export function getGeometrizeSeed(
   mode: GameMode,
   pokemonId: number
 ): number {
-  return hashString(`pokeshapes-geometrize-v1:${dateKey}:${mode}:pokemon-${pokemonId}`);
+  return hashString(`pokeshapes-geometrize-v2:${dateKey}:${mode}:pokemon-${pokemonId}`);
 }

@@ -10,23 +10,29 @@ build/
 out/
 storybook-static/
 
+# Internal & AI-generated documentation (kept local only)
+docs/
+/docs/
+
 # TypeScript compiler info
 *.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # Testing
 coverage/
 .nyc_output
 
-# Environment variables and local secrets
+# Environment variables, Cloudflare & local secrets
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
+.dev.vars
+.wrangler/
 *.pem
+*.key
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -34,20 +40,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Caches and tooling
+# Caches, scratch & AI/editor tooling
 .eslintcache
 .stylelintcache
 .turbo/
 .cache/
 .parcel-cache
 .next/
+.gemini/
+.claude/
+.cursor/
+.aider*
+scratch/
+tmp/
+temp/
 
 # IDEs and Text Editors
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
+.vscode/
 .idea/
 *.suo
 *.ntvs*

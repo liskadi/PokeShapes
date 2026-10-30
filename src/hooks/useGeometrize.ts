@@ -36,8 +36,7 @@ interface UseGeometrizeResult {
 
 export const TARGET_CANVAS_SIZE = 180;
 export const RUNNER_BG_COLOR: [number, number, number] = [15, 23, 42];
-// Bump cache prefix to v4 for updated Circles shape counts (Circles 220, Triangles 110, Lines 275)
-export const CACHE_VERSION = 'v4';
+export const CACHE_VERSION = 'v5';
 
 export function useGeometrize({
   dateKey,

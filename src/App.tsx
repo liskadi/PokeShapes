@@ -61,6 +61,7 @@ export function App() {
     isSubmittingGuess,
     submitGuess,
     giveUpCurrentGame,
+    resetAllGameData,
     stats,
     polyDex,
   } = useDailyGame({
@@ -281,8 +282,9 @@ export function App() {
               </a>
 
               <a
-                href="#kofi"
-                onClick={(e) => e.preventDefault()}
+                href="https://ko-fi.com/liskadi"
+                target="_blank"
+                rel="noreferrer"
                 title="Ko-Fi"
                 aria-label="Ko-Fi"
                 className="btn-tactile inline-flex items-center justify-center p-2 rounded-xl bg-slate-100 dark:bg-[#1C2842] border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] hover:border-rose-500 text-slate-700 dark:text-slate-100 hover:text-rose-500 dark:hover:text-rose-400"
@@ -350,6 +352,7 @@ export function App() {
         onClose={() => setIsSettingsOpen(false)}
         settings={settings}
         onUpdateSettings={updateSettings}
+        onResetAllData={resetAllGameData}
       />
       <ArchiveModal
         isOpen={isArchiveOpen}

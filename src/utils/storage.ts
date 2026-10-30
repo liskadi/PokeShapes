@@ -17,15 +17,36 @@ import {
   getPuzzleNumber,
 } from './dailySeed';
 
-const DAILY_STATE_KEY = 'pokeshapes:daily-state-v1';
-const ARCHIVE_STATE_PREFIX = 'pokeshapes:archive-state-v1:';
-const STATS_KEY = 'pokeshapes:stats-v1';
-const POLYDEX_KEY = 'pokeshapes:polydex-v1';
-const SETTINGS_KEY = 'pokeshapes:settings-v1';
-const ONBOARDED_KEY = 'pokeshapes:onboarded-v1';
+const DAILY_STATE_KEY = 'pokeshapes:daily-state-v2';
+const ARCHIVE_STATE_PREFIX = 'pokeshapes:archive-state-v2:';
+const STATS_KEY = 'pokeshapes:stats-v2';
+const POLYDEX_KEY = 'pokeshapes:polydex-v2';
+const SETTINGS_KEY = 'pokeshapes:settings-v2';
+const ONBOARDED_KEY = 'pokeshapes:onboarded-v2';
 
-const IDB_NAME = 'pokeshapes-shapes-db-v1';
+const IDB_NAME = 'pokeshapes-shapes-db-v2';
 const IDB_STORE = 'shapes';
+
+// Automatically purge legacy v1 storage keys on startup so all users start fresh on the v2 epoch
+(function purgeLegacyV1Storage() {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('pokeshapes:') && key.includes('-v1')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+    }
+    if (typeof indexedDB !== 'undefined') {
+      indexedDB.deleteDatabase('pokeshapes-shapes-db-v1');
+    }
+  } catch {
+    // Ignore storage cleanup error
+  }
+})();
 
 export const DEFAULT_SETTINGS: UserSettings = {
   theme: 'dark',
@@ -510,5 +531,46 @@ export async function setCachedShapes(
     store.put(shapes, cacheKey);
   } catch {
     // Ignore IDB write error
+  }
+}
+
+/**
+ * Resets all user gameplay data (Daily state, Archive states, Statistics, Streaks, PolyDex, and cached shapes).
+ */
+export async function clearAllUserData(): Promise<void> {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (
+        key &&
+        (key === DAILY_STATE_KEY ||
+          key === STATS_KEY ||
+          key === POLYDEX_KEY ||
+          key.startsWith(ARCHIVE_STATE_PREFIX) ||
+          key.startsWith('pokeshapes:daily-state') ||
+          key.startsWith('pokeshapes:archive-state') ||
+          key.startsWith('pokeshapes:stats') ||
+          key.startsWith('pokeshapes:polydex'))
+      ) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch {
+    // Ignore localStorage error
+  }
+
+  try {
+    const db = await openShapesDb();
+    await new Promise<void>((resolve) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.clear();
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+    });
+  } catch {
+    // Ignore IDB clear error
   }
 }

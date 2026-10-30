@@ -24,6 +24,8 @@ import {
 } from '../utils/dailySeed';
 import { soundEngine } from '../utils/sound';
 import {
+  clearAllUserData,
+  createDefaultStats,
   loadDailyState,
   loadPolyDex,
   loadStats,
@@ -390,6 +392,15 @@ export function useDailyGame({
     [soundEnabled]
   );
 
+  const resetAllGameData = useCallback(async () => {
+    await clearAllUserData();
+    setSelectedDailyDateKey(currentDateKey);
+    const freshDaily = loadDailyState(currentDateKey, true);
+    setDailyState(freshDaily);
+    setStats(createDefaultStats());
+    setPolyDex({});
+  }, [currentDateKey]);
+
   return {
     activeMode,
     selectMode,
@@ -411,6 +422,7 @@ export function useDailyGame({
     isSubmittingGuess,
     submitGuess,
     giveUpCurrentGame,
+    resetAllGameData,
     stats,
     polyDex,
   };
