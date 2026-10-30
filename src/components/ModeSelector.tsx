@@ -1,11 +1,6 @@
 import React from 'react';
-import { CheckCircle2, XCircle } from 'lucide-react';
-import {
-  GameMode,
-  getModeShapeConfig,
-  MAX_GUESSES,
-  ModeGameState,
-} from '../types/game';
+import { Check, X } from 'lucide-react';
+import { GameMode, MAX_GUESSES, ModeGameState } from '../types/game';
 
 interface ModeSelectorProps {
   activeMode: GameMode;
@@ -16,8 +11,7 @@ interface ModeSelectorProps {
 interface ModeConfig {
   id: GameMode;
   label: string;
-  subtitle: string;
-  accentClass: string;
+  iconBgClass: string;
   activeBorderClass: string;
   icon: React.ReactNode;
 }
@@ -26,45 +20,45 @@ const MODES: ModeConfig[] = [
   {
     id: 'circles',
     label: 'Circles',
-    subtitle: '40 → 220 Shapes',
-    accentClass: 'text-sky-500 dark:text-sky-400',
+    iconBgClass:
+      'bg-sky-500/15 border-sky-500/35 text-sky-600 dark:text-sky-400',
     activeBorderClass:
-      'border-sky-500 bg-sky-500/10 dark:bg-sky-500/15 shadow-lg shadow-sky-500/10',
+      'border-sky-500 border-b-sky-600 dark:border-sky-400 dark:border-b-sky-500 bg-sky-500/10 dark:bg-sky-500/18 shadow-[0_3px_0_rgba(56,189,248,0.28)] bg-diagonal-stripes',
     icon: (
-      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-        <circle cx="10" cy="12" r="7" opacity="0.85" />
-        <circle cx="16" cy="9" r="5" opacity="0.55" />
-        <circle cx="15" cy="16" r="4" opacity="0.4" />
+      <svg viewBox="0 0 24 24" className="w-4 h-4 sm:w-5 sm:h-5 fill-current">
+        <circle cx="10" cy="12" r="7" opacity="0.9" />
+        <circle cx="16" cy="9" r="5" opacity="0.6" />
+        <circle cx="15" cy="16" r="4" opacity="0.45" />
       </svg>
     ),
   },
   {
     id: 'triangles',
     label: 'Triangles',
-    subtitle: '20 → 110 Shapes',
-    accentClass: 'text-rose-500 dark:text-rose-400',
+    iconBgClass:
+      'bg-rose-500/15 border-rose-500/35 text-rose-600 dark:text-rose-400',
     activeBorderClass:
-      'border-rose-500 bg-rose-500/10 dark:bg-rose-500/15 shadow-lg shadow-rose-500/10',
+      'border-rose-500 border-b-rose-700 dark:border-rose-400 dark:border-b-rose-500 bg-rose-500/10 dark:bg-rose-500/18 shadow-[0_3px_0_rgba(244,63,94,0.28)] bg-diagonal-stripes',
     icon: (
-      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-        <polygon points="12,3 21,19 3,19" opacity="0.85" />
-        <polygon points="16,6 23,17 11,17" opacity="0.45" />
+      <svg viewBox="0 0 24 24" className="w-4 h-4 sm:w-5 sm:h-5 fill-current">
+        <polygon points="12,3 21,19 3,19" opacity="0.9" />
+        <polygon points="16,6 23,17 11,17" opacity="0.5" />
       </svg>
     ),
   },
   {
     id: 'lines',
     label: 'Lines',
-    subtitle: '50 → 275 Shapes',
-    accentClass: 'text-purple-500 dark:text-purple-400',
+    iconBgClass:
+      'bg-purple-500/15 border-purple-500/35 text-purple-600 dark:text-purple-400',
     activeBorderClass:
-      'border-purple-500 bg-purple-500/10 dark:bg-purple-500/15 shadow-lg shadow-purple-500/10',
+      'border-purple-500 border-b-purple-700 dark:border-purple-400 dark:border-b-purple-500 bg-purple-500/10 dark:bg-purple-500/18 shadow-[0_3px_0_rgba(168,85,247,0.28)] bg-diagonal-stripes',
     icon: (
       <svg
         viewBox="0 0 24 24"
-        className="w-5 h-5 stroke-current"
+        className="w-4 h-4 sm:w-5 sm:h-5 stroke-current"
         fill="none"
-        strokeWidth="2.6"
+        strokeWidth="2.8"
         strokeLinecap="round"
       >
         <line x1="4" y1="18" x2="18" y2="4" />
@@ -82,24 +76,14 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
 }) => {
   return (
     <div
-      className="grid grid-cols-3 gap-2.5 sm:gap-3.5"
+      className="grid grid-cols-3 gap-2 sm:gap-4"
       role="tablist"
       aria-label="Geometric Shape Game Modes"
     >
       {MODES.map((m) => {
         const state = modesState[m.id];
-        const shapeCfg = getModeShapeConfig(m.id);
         const isActive = activeMode === m.id;
-        const wrongCount = state.guesses.filter(
-          (g) => !g.comparison.isCorrect
-        ).length;
-        const shapesCount =
-          state.status === 'playing'
-            ? Math.min(
-                shapeCfg.maxShapes,
-                shapeCfg.initialShapes + wrongCount * shapeCfg.increment
-              )
-            : shapeCfg.maxShapes;
+        const guessCount = state.guesses.length;
 
         return (
           <button
@@ -108,71 +92,45 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
             role="tab"
             aria-selected={isActive}
             onClick={() => onSelectMode(m.id)}
-            className={`relative flex flex-col justify-between p-3 sm:p-3.5 rounded-2xl border-2 text-left transition-all duration-200 ${
+            className={`btn-tactile flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 py-2 sm:px-3.5 sm:py-3 rounded-2xl text-left cursor-pointer ${
               isActive
                 ? m.activeBorderClass
-                : 'border-slate-200/90 dark:border-slate-800/90 bg-white/75 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700'
+                : 'border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] bg-white dark:bg-[#172138] hover:bg-slate-50 dark:hover:bg-[#1E2B48]'
             }`}
           >
-            <div className="flex items-start justify-between gap-1.5 w-full">
-              <div className="flex items-center gap-2">
-                <span className={m.accentClass}>{m.icon}</span>
-                <div>
-                  <div className="font-display font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight">
-                    {m.label}
-                  </div>
-                  <div className="hidden sm:block text-[11px] text-slate-500 dark:text-slate-400">
-                    {m.subtitle}
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Badge */}
-              {state.status === 'won' && (
-                <span
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-mono font-bold badge-exact border"
-                  title={`Caught in ${state.guesses.length}/${MAX_GUESSES} guesses`}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span className="hidden md:inline">
-                    {state.guesses.length}/{MAX_GUESSES}
-                  </span>
-                </span>
-              )}
-              {state.status === 'lost' && (
-                <span
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-mono font-bold badge-none border"
-                  title="Out of guesses"
-                >
-                  <XCircle className="w-3.5 h-3.5" />
-                  <span className="hidden md:inline">X/{MAX_GUESSES}</span>
-                </span>
-              )}
-              {state.status === 'playing' && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                  {shapesCount} sh
-                </span>
-              )}
+            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+              <span
+                className={`w-7 h-7 sm:w-9 sm:h-9 rounded-xl border flex items-center justify-center shrink-0 ${m.iconBgClass}`}
+              >
+                {m.icon}
+              </span>
+              <span className="font-display font-bold text-xs sm:text-lg text-slate-900 dark:text-white truncate">
+                {m.label}
+              </span>
             </div>
 
-            {/* Bottom Progress Bar (10 guess slots) */}
-            <div className="mt-2.5 flex items-center gap-1 w-full">
-              {Array.from({ length: MAX_GUESSES }).map((_, idx) => {
-                const guess = state.guesses[idx];
-                let dotClass = 'bg-slate-200 dark:bg-slate-800';
-                if (guess) {
-                  dotClass = guess.comparison.isCorrect
-                    ? 'bg-emerald-500'
-                    : 'bg-rose-500/80';
-                }
-                return (
-                  <span
-                    key={idx}
-                    className={`h-1.5 flex-1 rounded-full transition-colors ${dotClass}`}
-                  />
-                );
-              })}
-            </div>
+            {/* Single Clean Status Indicator */}
+            {state.status === 'won' && (
+              <span
+                className="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full badge-exact border-2 shrink-0"
+                title={`Caught in ${guessCount}/${MAX_GUESSES}`}
+              >
+                <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+              </span>
+            )}
+            {state.status === 'lost' && (
+              <span
+                className="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full badge-none border-2 shrink-0"
+                title="Missed"
+              >
+                <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+              </span>
+            )}
+            {state.status === 'playing' && guessCount > 0 && (
+              <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-lg text-[10px] sm:text-[11px] font-mono font-bold bg-slate-100 dark:bg-[#0D1322] border border-slate-200 dark:border-[#2C3E63] text-slate-600 dark:text-slate-300 shrink-0">
+                {guessCount}/{MAX_GUESSES}
+              </span>
+            )}
           </button>
         );
       })}

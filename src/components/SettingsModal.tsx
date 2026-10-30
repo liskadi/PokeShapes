@@ -60,9 +60,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       aria-modal="true"
       aria-labelledby="settings-modal-title"
     >
-      <div className="relative w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div className="game-card relative w-full max-w-lg rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 border-b-2 border-slate-200 dark:border-[#24304d] bg-diagonal-stripes flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
               <Settings className="w-5 h-5" />

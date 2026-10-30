@@ -75,11 +75,11 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+        className="game-card relative w-full max-w-2xl rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 border-b-2 border-slate-200 dark:border-[#24304d] bg-diagonal-stripes flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
               <MessageCircleQuestion className="w-5 h-5" />
@@ -148,7 +148,7 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-display font-bold text-xs shadow-md shadow-rose-500/20 transition-all"
+            className="btn-tactile px-5 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 border-rose-400 border-b-rose-700 text-white font-display font-bold text-xs cursor-pointer"
           >
             Got It!
           </button>

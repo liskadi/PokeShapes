@@ -138,9 +138,9 @@ export const StatsModal: React.FC<StatsModalProps> = ({
       aria-modal="true"
       aria-labelledby="stats-modal-title"
     >
-      <div className="relative w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div className="game-card relative w-full max-w-lg rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[92vh] flex flex-col">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 border-b-2 border-slate-200 dark:border-[#24304d] bg-diagonal-stripes flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
               <BarChart3 className="w-5 h-5" />
@@ -198,41 +198,41 @@ export const StatsModal: React.FC<StatsModalProps> = ({
         {/* Scrollable Content */}
         <div className="p-6 overflow-y-auto space-y-6">
           {/* 4 KPI Metric Cards */}
-          <div className="grid grid-cols-4 gap-2.5">
-            <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 p-3 text-center">
-              <div className="font-mono font-extrabold text-2xl text-slate-900 dark:text-white">
+          <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
+            <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 p-2.5 sm:p-3 text-center">
+              <div className="font-mono font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white">
                 {displayStats.played}
               </div>
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+              <div className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                 Played
               </div>
             </div>
 
-            <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 p-3 text-center">
-              <div className="font-mono font-extrabold text-2xl text-emerald-500">
+            <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 p-2.5 sm:p-3 text-center">
+              <div className="font-mono font-extrabold text-xl sm:text-2xl text-emerald-500">
                 {winPercent}%
               </div>
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+              <div className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                 Win Rate
               </div>
             </div>
 
-            <div className="rounded-2xl bg-amber-500/10 border border-amber-500/25 p-3 text-center">
-              <div className="font-mono font-extrabold text-2xl text-amber-500 flex items-center justify-center gap-1">
-                <Flame className="w-5 h-5 fill-amber-500" />
+            <div className="rounded-2xl bg-amber-500/10 border border-amber-500/25 p-2.5 sm:p-3 text-center">
+              <div className="font-mono font-extrabold text-xl sm:text-2xl text-amber-500 flex items-center justify-center gap-0.5 sm:gap-1">
+                <Flame className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-500 shrink-0" />
                 <span>{displayStats.currentStreak}</span>
               </div>
-              <div className="text-[11px] font-medium text-amber-700 dark:text-amber-300 mt-0.5">
-                Current Streak
+              <div className="text-[10px] sm:text-[11px] font-medium text-amber-700 dark:text-amber-300 mt-0.5 truncate">
+                Streak
               </div>
             </div>
 
-            <div className="rounded-2xl bg-indigo-500/10 border border-indigo-500/25 p-3 text-center">
-              <div className="font-mono font-extrabold text-2xl text-indigo-500 dark:text-indigo-400 flex items-center justify-center gap-1">
-                <Trophy className="w-4 h-4" />
+            <div className="rounded-2xl bg-indigo-500/10 border border-indigo-500/25 p-2.5 sm:p-3 text-center">
+              <div className="font-mono font-extrabold text-xl sm:text-2xl text-indigo-500 dark:text-indigo-400 flex items-center justify-center gap-0.5 sm:gap-1">
+                <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 <span>{displayStats.maxStreak}</span>
               </div>
-              <div className="text-[11px] font-medium text-indigo-700 dark:text-indigo-300 mt-0.5">
+              <div className="text-[10px] sm:text-[11px] font-medium text-indigo-700 dark:text-indigo-300 mt-0.5 truncate">
                 Max Streak
               </div>
             </div>
@@ -318,7 +318,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             <button
               type="button"
               onClick={handleShareResults}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-display font-bold text-sm shadow-lg shadow-rose-500/25 transition-all"
+              className="btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 border-rose-400 border-b-rose-700 text-white font-display font-bold text-sm cursor-pointer"
             >
               {copied ? (
                 <>

@@ -114,13 +114,11 @@ export function App() {
   const isArchiveDate = selectedDailyDateKey !== currentDateKey;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-[#090D16] text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="min-h-screen flex flex-col bg-pokeball-wallpaper text-slate-900 dark:text-slate-100 transition-colors">
       {/* Top Navigation Header */}
       <Header
         puzzleNumber={dailyState.puzzleNumber}
-        dateKey={dailyState.dateKey}
         isArchiveDate={isArchiveDate}
-        countdownFormatted={countdownFormatted}
         dailyStreak={stats.dailyOverallStreak}
         polyDexCount={Object.keys(polyDex).length}
         theme={settings.theme}
@@ -129,7 +127,6 @@ export function App() {
             theme: settings.theme === 'dark' ? 'light' : 'dark',
           })
         }
-        onSelectToday={() => selectArchiveDate(currentDateKey)}
         onOpenArchive={() => setIsArchiveOpen(true)}
         onOpenPolyDex={() => setIsPolyDexOpen(true)}
         onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
@@ -186,7 +183,7 @@ export function App() {
       )}
 
       {/* Main Content Container */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-5 sm:py-7 space-y-5">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3 py-3 sm:px-4 sm:py-6 space-y-3.5 sm:space-y-5">
         {/* 3 Shape Game Modes Selector (Circles, Triangles, Lines) */}
         <ModeSelector
           activeMode={activeMode}
@@ -195,7 +192,7 @@ export function App() {
         />
 
         {/* Responsive Game Arena Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 lg:gap-6 items-start">
           {/* Left Column: Geometrize Scanner Viewport */}
           <div className="lg:col-span-6">
             <GeometrizeCanvas
@@ -221,7 +218,7 @@ export function App() {
           </div>
 
           {/* Right Column: Scanner Clues, Search Combobox & Guess Log */}
-          <div className="lg:col-span-6 space-y-4">
+          <div className="lg:col-span-6 space-y-3 sm:space-y-4">
             {/* 2.1 Progressive Scanner Clues (3 Wrong = Gen, 5 Wrong = Primary Type, 7 Wrong = Habitat + Official Cry) */}
             <ScannerClues
               wrongGuessesCount={wrongGuessesCount}
@@ -252,12 +249,12 @@ export function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200/70 dark:border-slate-800/70 py-5 px-4 text-xs text-slate-500 dark:text-slate-400 bg-white/40 dark:bg-slate-950/40">
+      <footer className="border-t-2 border-slate-300 dark:border-[#2C3E63] py-5 px-4 text-xs text-slate-600 dark:text-slate-400 bg-white/90 dark:bg-[#11182B]/90 backdrop-blur-xs">
         <div className="max-w-5xl mx-auto space-y-3">
           {/* Top Row: Left Project Version/Year, Center Action Buttons, Right Geometrize Credit */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
             {/* Left: Project Name - Version - Year */}
-            <div className="font-display font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+            <div className="font-display font-bold text-sm text-slate-800 dark:text-slate-200 whitespace-nowrap">
               PokéShapes - v1.0.0 - 2026
             </div>
 
@@ -267,7 +264,7 @@ export function App() {
                 href="mailto:?subject=Pok%C3%A9Shapes%20Feedback%20%26%20Bugs"
                 title="Feedback & Bugs"
                 aria-label="Feedback & Bugs"
-                className="inline-flex items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/50 dark:hover:border-rose-500/50 text-slate-700 dark:text-slate-300 hover:text-rose-500 dark:hover:text-rose-400 transition-all shadow-2xs"
+                className="btn-tactile inline-flex items-center justify-center p-2 rounded-xl bg-slate-100 dark:bg-[#1C2842] border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] hover:border-rose-500 text-slate-700 dark:text-slate-100 hover:text-rose-500 dark:hover:text-rose-400"
               >
                 <Mail className="w-4 h-4" />
               </a>
@@ -277,7 +274,7 @@ export function App() {
                 onClick={(e) => e.preventDefault()}
                 title="Github"
                 aria-label="Github"
-                className="inline-flex items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/50 dark:hover:border-rose-500/50 text-slate-700 dark:text-slate-300 hover:text-rose-500 dark:hover:text-rose-400 transition-all shadow-2xs"
+                className="btn-tactile inline-flex items-center justify-center p-2 rounded-xl bg-slate-100 dark:bg-[#1C2842] border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] hover:border-rose-500 text-slate-700 dark:text-slate-100 hover:text-rose-500 dark:hover:text-rose-400"
               >
                 <Github className="w-4 h-4" />
               </a>
@@ -287,7 +284,7 @@ export function App() {
                 onClick={(e) => e.preventDefault()}
                 title="Ko-Fi"
                 aria-label="Ko-Fi"
-                className="inline-flex items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/50 dark:hover:border-rose-500/50 text-slate-700 dark:text-slate-300 hover:text-rose-500 dark:hover:text-rose-400 transition-all shadow-2xs"
+                className="btn-tactile inline-flex items-center justify-center p-2 rounded-xl bg-slate-100 dark:bg-[#1C2842] border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] hover:border-rose-500 text-slate-700 dark:text-slate-100 hover:text-rose-500 dark:hover:text-rose-400"
               >
                 <Coffee className="w-4 h-4" />
               </a>
@@ -297,20 +294,20 @@ export function App() {
                 onClick={() => setIsFaqOpen(true)}
                 title="FAQ"
                 aria-label="FAQ"
-                className="inline-flex items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/50 dark:hover:border-rose-500/50 text-slate-700 dark:text-slate-300 hover:text-rose-500 dark:hover:text-rose-400 transition-all shadow-2xs cursor-pointer"
+                className="btn-tactile inline-flex items-center justify-center p-2 rounded-xl bg-slate-100 dark:bg-[#1C2842] border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] hover:border-rose-500 text-slate-700 dark:text-slate-100 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer"
               >
                 <HelpCircle className="w-4 h-4" />
               </button>
             </div>
 
             {/* Right: Powered by geometrize */}
-            <div className="whitespace-nowrap">
+            <div className="whitespace-nowrap font-medium">
               Powered by{' '}
               <a
                 href="https://github.com/Tw1ddle/geometrize"
                 target="_blank"
                 rel="noreferrer"
-                className="underline hover:text-rose-500 transition-colors font-semibold"
+                className="underline hover:text-rose-500 transition-colors font-display font-bold text-slate-800 dark:text-slate-200"
               >
                 geometrize
               </a>

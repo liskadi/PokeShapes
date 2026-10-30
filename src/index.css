@@ -3,17 +3,17 @@
 
 :root {
   /* Standard semantic feedback colors */
-  --match-exact-bg: rgba(16, 185, 129, 0.18);
+  --match-exact-bg: rgba(16, 185, 129, 0.16);
   --match-exact-border: #10b981;
-  --match-exact-text: #059669;
+  --match-exact-text: #047857;
 
   --match-partial-bg: rgba(245, 158, 11, 0.18);
   --match-partial-border: #f59e0b;
-  --match-partial-text: #d97706;
+  --match-partial-text: #b45309;
 
   --match-none-bg: rgba(244, 63, 94, 0.14);
-  --match-none-border: rgba(244, 63, 94, 0.45);
-  --match-none-text: #e11d48;
+  --match-none-border: #f43f5e;
+  --match-none-text: #be123c;
 
   /* Mode accent colors */
   --mode-circles: #38bdf8;
@@ -30,9 +30,9 @@
   --match-partial-border: #f59e0b;
   --match-partial-text: #fbbf24;
 
-  --match-none-bg: rgba(244, 63, 94, 0.15);
-  --match-none-border: rgba(244, 63, 94, 0.4);
-  --match-none-text: #fb7185;
+  --match-none-bg: rgba(244, 63, 94, 0.16);
+  --match-none-border: #fb7185;
+  --match-none-text: #fda4af;
 }
 
 /* Color Blind Mode: Deuteranopia / Protanopia (Red-Green Safe -> Blue / Orange / Slate) */
@@ -106,12 +106,58 @@
   color: var(--match-none-text);
 }
 
-/* Subtle gamer background grid */
+/* Tactile Pokémon Game Card (Crisp 2px border + hard 3D bottom lip) */
+.game-card {
+  border-width: 2px;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 0 #cbd5e1;
+}
+
+.dark .game-card {
+  border-color: #2e4066;
+  box-shadow: 0 4px 0 #1e2b47;
+}
+
+/* Tactile 3D Keycap Button Physics */
+.btn-tactile {
+  border-width: 2px;
+  border-bottom-width: 4px;
+  transition: transform 0.1s ease, border-bottom-width 0.1s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-tactile:not(:disabled):active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+/* Subtle Pokéball Wallpaper Background (Trainer Lab Cream in Light, Rotom-Dex Night in Dark) */
+.bg-pokeball-wallpaper {
+  background-color: #f4f1ea;
+  background-image: url("data:image/svg+xml,%3Csvg width='84' height='84' viewBox='0 0 84 84' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2394a3b8' stroke-width='1.5' stroke-opacity='0.12' transform='rotate(-18 42 42)'%3E%3Ccircle cx='42' cy='42' r='18'/%3E%3Ccircle cx='42' cy='42' r='6'/%3E%3Cline x1='24' y1='42' x2='36' y2='42'/%3E%3Cline x1='48' y1='42' x2='60' y2='42'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.dark .bg-pokeball-wallpaper {
+  background-color: #0c1220;
+  background-image: url("data:image/svg+xml,%3Csvg width='84' height='84' viewBox='0 0 84 84' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2364748b' stroke-width='1.5' stroke-opacity='0.09' transform='rotate(-18 42 42)'%3E%3Ccircle cx='42' cy='42' r='18'/%3E%3Ccircle cx='42' cy='42' r='6'/%3E%3Cline x1='24' y1='42' x2='36' y2='42'/%3E%3Cline x1='48' y1='42' x2='60' y2='42'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Modern Switch UI 45-degree diagonal speed stripe accent */
+.bg-diagonal-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.04) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+}
+
+/* Optical Pokédex Scanner Grid */
 .bg-pokedex-grid {
-  background-size: 32px 32px;
-  background-image: 
-    linear-gradient(to right, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-image:
+    linear-gradient(to right, rgba(56, 189, 248, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.07) 1px, transparent 1px);
 }
 
 /* SVG Shape Reveal Animation */
@@ -143,10 +189,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background: rgba(148, 163, 184, 0.55);
 }

@@ -2,8 +2,6 @@ import React from 'react';
 import {
   BarChart3,
   BookOpen,
-  Calendar,
-  Clock,
   Flame,
   HelpCircle,
   History,
@@ -15,14 +13,11 @@ import { ThemeMode } from '../types/game';
 
 interface HeaderProps {
   puzzleNumber: number;
-  dateKey: string;
   isArchiveDate: boolean;
-  countdownFormatted: string;
   dailyStreak: number;
   polyDexCount: number;
   theme: ThemeMode;
   onToggleTheme: () => void;
-  onSelectToday: () => void;
   onOpenArchive: () => void;
   onOpenPolyDex: () => void;
   onOpenHowToPlay: () => void;
@@ -32,14 +27,11 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   puzzleNumber,
-  dateKey,
   isArchiveDate,
-  countdownFormatted,
   dailyStreak,
   polyDexCount,
   theme,
   onToggleTheme,
-  onSelectToday,
   onOpenArchive,
   onOpenPolyDex,
   onOpenHowToPlay,
@@ -47,130 +39,128 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
 }) => {
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md transition-colors">
-      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-        {/* Brand Logo & Title */}
-        <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 via-red-600 to-indigo-600 p-0.5 shadow-lg shadow-rose-500/20 flex items-center justify-center group">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center overflow-hidden">
-              <svg
-                viewBox="0 0 100 100"
-                className="w-7 h-7 transition-transform duration-300 group-hover:rotate-12"
-              >
-                <polygon
-                  points="50,6 88,24 95,48 5,48 12,24"
-                  fill="#F43F5E"
-                />
-                <polygon
-                  points="50,6 88,24 50,48"
-                  fill="#FDA4AF"
-                  opacity="0.45"
-                />
-                <polygon
-                  points="5,52 95,52 88,76 50,94 12,76"
-                  fill="#F1F5F9"
-                />
-                <polygon
-                  points="50,32 66,41 66,59 50,68 34,59 34,41"
-                  fill="#0F172A"
-                />
-                <circle cx="50" cy="50" r="10" fill="#38BDF8" />
-              </svg>
-            </div>
+    <header className="sticky top-0 z-30 border-b-2 border-slate-300 dark:border-[#2C3E63] bg-white/95 dark:bg-[#11182B]/95 backdrop-blur-md shadow-[0_3px_0_rgba(203,213,225,0.65)] dark:shadow-[0_3px_0_rgba(30,43,71,0.85)] transition-colors">
+      {/* Pokédex Top Chassis Accent Strip */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-rose-600 via-red-500 to-amber-400" />
+
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
+        {/* Left: Pokédex Camera Lens + Brand Title + Daily Badge */}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-slate-900 dark:bg-[#0B101D] border-2 border-slate-800 dark:border-[#334770] shadow-[0_2px_0_#1e293b] flex items-center justify-center group overflow-hidden shrink-0">
+            <svg
+              viewBox="0 0 100 100"
+              className="w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-300 group-hover:rotate-12"
+            >
+              <polygon
+                points="50,6 88,24 95,48 5,48 12,24"
+                fill="#FF385C"
+              />
+              <polygon
+                points="50,6 88,24 50,48"
+                fill="#FDA4AF"
+                opacity="0.45"
+              />
+              <polygon
+                points="5,52 95,52 88,76 50,94 12,76"
+                fill="#F8FAFC"
+              />
+              <polygon
+                points="50,32 66,41 66,59 50,68 34,59 34,41"
+                fill="#0F172A"
+              />
+              <circle cx="50" cy="50" r="10" fill="#38BDF8" />
+              <circle cx="47" cy="47" r="3.5" fill="#E0F2FE" />
+            </svg>
           </div>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-display font-extrabold text-xl sm:text-2xl tracking-tight text-slate-900 dark:text-white">
-                POKÉ<span className="text-rose-500">SHAPES</span>
-              </h1>
-              <button
-                type="button"
-                onClick={onOpenArchive}
-                className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold border transition-colors ${
-                  isArchiveDate
-                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/25'
-                    : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25 hover:bg-rose-500/20'
-                }`}
-                title="Click to browse Past Daily Archive or Yesterday's Champions"
-              >
-                <span>
-                  {isArchiveDate ? 'ARCHIVE' : 'DAILY'} #{puzzleNumber}
-                </span>
-              </button>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <span>{dateKey}</span>
-              <span className="hidden md:inline text-slate-300 dark:text-slate-700">
-                •
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <h1 className="font-display font-bold text-lg sm:text-2xl tracking-wide text-slate-900 dark:text-white leading-none truncate">
+              POKÉ<span className="text-rose-500">SHAPES</span>
+            </h1>
+            <button
+              type="button"
+              onClick={onOpenArchive}
+              className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-mono font-bold border-2 transition-all cursor-pointer shrink-0 ${
+                isArchiveDate
+                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40 hover:bg-amber-500/25'
+                  : 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/35 hover:bg-rose-500/25'
+              }`}
+              title="Browse Past Daily Archive"
+            >
+              <span className="hidden sm:inline">
+                {isArchiveDate ? 'ARCHIVE' : 'DAILY'}{' '}
               </span>
-              <span className="hidden md:inline-flex items-center gap-1 font-mono text-[11px] text-slate-400 dark:text-slate-500">
-                <Clock className="w-3 h-3 text-sky-400" />
-                Reset in {countdownFormatted}
-              </span>
-            </p>
+              <span>#{puzzleNumber}</span>
+            </button>
           </div>
         </div>
 
-        {/* Center Switcher (Today's Daily vs Past Archive) */}
-        <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
-          <button
-            type="button"
-            onClick={onSelectToday}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              !isArchiveDate
-                ? 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-            title="Play Today's Live Daily Puzzles"
-          >
-            <Calendar className="w-3.5 h-3.5" />
-            <span>Today&apos;s Daily</span>
-          </button>
-          <button
-            type="button"
-            onClick={onOpenArchive}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              isArchiveDate
-                ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-            title="Browse Yesterday's Champions & Past Daily Archive"
-          >
-            <History className="w-3.5 h-3.5" />
-            <span>Past Archive</span>
-          </button>
-        </div>
-
-        {/* Right Action Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Right Tactile Controls */}
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* PolyDex Button */}
           <button
             type="button"
             onClick={onOpenPolyDex}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-colors"
+            className="btn-tactile flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/40 border-b-emerald-600/80 dark:border-emerald-400/45 dark:border-b-emerald-500/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold cursor-pointer"
             title="Open Personal PolyDex & Trainer Rank"
           >
-            <BookOpen className="w-4 h-4" />
-            <span className="font-mono">{polyDexCount}</span>
+            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="font-mono font-bold">{polyDexCount}</span>
           </button>
 
           {/* Streak Pill */}
           <button
             type="button"
             onClick={onOpenStats}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-bold transition-colors"
+            className="btn-tactile flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/40 border-b-amber-600/80 dark:border-amber-400/45 dark:border-b-amber-500/80 text-amber-700 dark:text-amber-300 text-xs font-bold cursor-pointer"
             title="Current Daily Streak — Click to view Statistics"
           >
-            <Flame className="w-4 h-4 fill-amber-500 text-amber-500" />
-            <span className="font-mono">{dailyStreak}</span>
+            <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-amber-500 text-amber-500" />
+            <span className="font-mono font-bold">{dailyStreak}</span>
+          </button>
+
+          {/* Past Archive */}
+          <button
+            type="button"
+            onClick={onOpenArchive}
+            className={`btn-tactile p-1.5 sm:p-2 rounded-xl cursor-pointer ${
+              isArchiveDate
+                ? 'bg-amber-500 text-slate-950 border-amber-400 border-b-amber-700'
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#1C2842] dark:hover:bg-[#243354] text-slate-700 dark:text-slate-100 border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F]'
+            }`}
+            aria-label="Past Daily Archive"
+            title="Past Daily Archive"
+          >
+            <History className="w-4 h-4" />
+          </button>
+
+          {/* Statistics */}
+          <button
+            type="button"
+            onClick={onOpenStats}
+            className="btn-tactile p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1C2842] dark:hover:bg-[#243354] text-slate-700 dark:text-slate-100 border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] cursor-pointer"
+            aria-label="Statistics"
+            title="Statistics & Streaks"
+          >
+            <BarChart3 className="w-4 h-4" />
+          </button>
+
+          {/* How to Play */}
+          <button
+            type="button"
+            onClick={onOpenHowToPlay}
+            className="btn-tactile p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1C2842] dark:hover:bg-[#243354] text-slate-700 dark:text-slate-100 border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] cursor-pointer"
+            aria-label="How to Play"
+            title="How to Play"
+          >
+            <HelpCircle className="w-4 h-4" />
           </button>
 
           {/* Quick Theme Toggle */}
           <button
             type="button"
             onClick={onToggleTheme}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 transition-colors"
+            className="btn-tactile p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1C2842] dark:hover:bg-[#243354] text-slate-700 dark:text-slate-100 border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] cursor-pointer"
             aria-label="Toggle Light/Dark Theme"
             title={
               theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'
@@ -183,74 +173,17 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {/* How to Play */}
-          <button
-            type="button"
-            onClick={onOpenHowToPlay}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 transition-colors"
-            aria-label="How to Play"
-            title="How to Play"
-          >
-            <HelpCircle className="w-4 h-4" />
-          </button>
-
-          {/* Statistics */}
-          <button
-            type="button"
-            onClick={onOpenStats}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 transition-colors"
-            aria-label="Statistics"
-            title="Statistics & Streaks"
-          >
-            <BarChart3 className="w-4 h-4" />
-          </button>
-
           {/* Settings */}
           <button
             type="button"
             onClick={onOpenSettings}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 transition-colors"
+            className="btn-tactile p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1C2842] dark:hover:bg-[#243354] text-slate-700 dark:text-slate-100 border-slate-300 border-b-slate-400 dark:border-[#334770] dark:border-b-[#435C8F] cursor-pointer"
             aria-label="Game Settings"
-            title="Game Settings (Theme, Color Blind Mode, Hints)"
+            title="Game Settings & Accessibility"
           >
             <Settings className="w-4 h-4" />
           </button>
         </div>
-      </div>
-
-      {/* Mobile Today / Archive Bar */}
-      <div className="sm:hidden px-4 pb-2.5 flex items-center justify-between gap-2">
-        <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800">
-          <button
-            type="button"
-            onClick={onSelectToday}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${
-              !isArchiveDate
-                ? 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-sm'
-                : 'text-slate-500'
-            }`}
-          >
-            <Calendar className="w-3 h-3" />
-            <span>Today</span>
-          </button>
-          <button
-            type="button"
-            onClick={onOpenArchive}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${
-              isArchiveDate
-                ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm'
-                : 'text-slate-500'
-            }`}
-          >
-            <History className="w-3 h-3" />
-            <span>Archive</span>
-          </button>
-        </div>
-
-        <span className="flex items-center gap-1 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-          <Clock className="w-3 h-3 text-sky-400" />
-          Next: {countdownFormatted}
-        </span>
       </div>
     </header>
   );
