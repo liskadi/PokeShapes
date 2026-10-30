@@ -3,6 +3,8 @@ import {
   Award,
   BookOpen,
   Check,
+  ChevronDown,
+  ChevronUp,
   Loader2,
   Lock,
   Search,
@@ -180,7 +182,7 @@ const ModeGeometryPreviewCard: React.FC<ModePreviewBoxProps> = ({
               : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
           }`}
         >
-          {isModeCaught ? `${shapeCfg.maxShapes} Shapes` : 'Missing'}
+          {isModeCaught ? 'Unlocked' : 'Missing'}
         </span>
       </div>
 
@@ -201,7 +203,7 @@ const ModeGeometryPreviewCard: React.FC<ModePreviewBoxProps> = ({
           <div className="flex flex-col items-center justify-center p-4 text-slate-300">
             <Loader2 className="w-6 h-6 text-rose-500 animate-spin mb-2" />
             <span className="text-[11px] font-mono text-slate-400">
-              Rendering {shapeCfg.maxShapes} shapes…
+              Rendering…
             </span>
           </div>
         ) : (
@@ -233,6 +235,7 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
   const [genFilter, setGenFilter] = useState<GenerationFilter>('all');
   const [onlyCaught, setOnlyCaught] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showRanks, setShowRanks] = useState<boolean>(false);
   const [selectedPokemon, setSelectedPokemon] =
     useState<PokemonIndexEntry | null>(null);
 
@@ -281,9 +284,9 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
       aria-modal="true"
       aria-labelledby="polydex-modal-title"
     >
-      <div className="relative w-full max-w-3xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div className="game-card relative w-full max-w-3xl rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 border-b-2 border-slate-200 dark:border-[#24304d] bg-diagonal-stripes flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
               <BookOpen className="w-5 h-5" />
@@ -293,10 +296,10 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
                 id="polydex-modal-title"
                 className="font-display font-extrabold text-lg text-slate-900 dark:text-white"
               >
-                Personal PolyDex & Trainer Rank
+                PolyDex
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Click any caught Pokémon to view its final geometry across Circles, Triangles & Lines
+                Click any caught Pokémon to inspect its unlocked shape art
               </p>
             </div>
           </div>
@@ -304,66 +307,76 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             aria-label="Close PolyDex"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Trainer Rank Banner + Available Ranks Ladder */}
-        <div className="px-6 pt-4 pb-4 bg-slate-50/80 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800 space-y-3">
+        {/* Trainer Rank Banner & Filter Bar */}
+        <div className="px-6 py-3.5 bg-slate-50/80 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div
-                className={`px-3.5 py-2 rounded-2xl border font-display font-extrabold text-sm flex items-center gap-2 ${rankInfo.badgeColor}`}
+                className={`px-3 py-1.5 rounded-xl border font-display font-extrabold text-xs sm:text-sm flex items-center gap-1.5 ${rankInfo.badgeColor}`}
               >
                 <Shield className="w-4 h-4" />
                 <span>{rankInfo.title}</span>
               </div>
               <div>
                 <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  {uniqueCaughtCount} / {TOTAL_MAINLINE_POKEMON} Unique Pokémon Registered
+                  {uniqueCaughtCount} / {TOTAL_MAINLINE_POKEMON} Caught
                 </div>
                 <div className="text-[11px] text-slate-500 dark:text-slate-400">
                   {rankInfo.nextRankTitle
                     ? `${
                         rankInfo.nextRankTarget! - uniqueCaughtCount
-                      } more catches to reach ${rankInfo.nextRankTitle}`
-                    : 'Maximum PokéShapes Rank Achieved!'}
+                      } more to reach ${rankInfo.nextRankTitle}`
+                    : 'Maximum Rank Achieved!'}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs font-mono">
-              <Award className="w-4 h-4 text-amber-500" />
-              <span className="font-bold text-slate-700 dark:text-slate-300">
-                {progressPercent}% to Next Rank
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline-flex items-center gap-1 text-xs font-mono text-slate-600 dark:text-slate-300">
+                <Award className="w-3.5 h-3.5 text-amber-500" />
+                <span>{progressPercent}%</span>
               </span>
+
+              <button
+                type="button"
+                onClick={() => setShowRanks((prev) => !prev)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-rose-400 transition-colors cursor-pointer"
+              >
+                <span>{showRanks ? 'Hide Ranks' : 'View Ranks'}</span>
+                {showRanks ? (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                )}
+              </button>
             </div>
           </div>
 
           {/* Rank Progress Bar */}
-          <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+          <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500 transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
 
-          {/* All Available Trainer Ranks Ladder */}
-          <div className="pt-1">
-            <div className="text-[10px] font-display font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
-              Available Trainer Ranks (Unique Pokémon Caught):
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5">
+          {/* Collapsible Trainer Ranks Ladder */}
+          {showRanks && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5 pt-1">
               {TRAINER_RANKS.map((r) => {
                 const isUnlocked = uniqueCaughtCount >= r.min;
                 const isCurrent = rankInfo.title === r.title;
                 return (
                   <div
                     key={r.title}
-                    className={`px-2 py-1.5 rounded-xl border text-center flex flex-col items-center justify-center transition-all ${
+                    className={`px-2 py-1.5 rounded-xl border text-center flex flex-col items-center justify-center ${
                       isCurrent
                         ? `${r.badgeColor} ring-2 ring-rose-500/40 font-bold`
                         : isUnlocked
@@ -380,52 +393,40 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
                       ) : (
                         <Lock className="w-2.5 h-2.5" />
                       )}
-                      <span>{r.min}+ caught</span>
+                      <span>{r.min}+</span>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
+          )}
 
-          {/* Filter Controls */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-            {/* Generation Pills */}
-            <div className="flex flex-wrap items-center gap-1">
-              {(
-                ['all', 1, 2, 3, 4, 5, 6, 7, 8, 9] as GenerationFilter[]
-              ).map((g) => (
-                <button
-                  key={String(g)}
-                  type="button"
-                  onClick={() => setGenFilter(g)}
-                  className={`px-2 py-1 rounded-lg text-[11px] font-mono font-bold transition-colors ${
-                    genFilter === g
-                      ? 'bg-rose-500 text-white'
-                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
-                  }`}
-                >
-                  {g === 'all' ? 'All' : `Gen ${getGenerationRoman(g)}`}
-                </button>
-              ))}
-            </div>
-
+          {/* Compact Filter Controls: 1 Generation Dropdown + Search + Caught Only Toggle */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
             <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Filter Dex…"
-                  className="pl-7 pr-2.5 py-1 rounded-lg text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:border-rose-500 w-32 sm:w-40"
-                />
-              </div>
+              <select
+                value={String(genFilter)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setGenFilter(
+                    val === 'all' ? 'all' : (Number(val) as GenerationFilter)
+                  );
+                }}
+                aria-label="Filter by Generation"
+                className="px-2.5 py-1.5 rounded-xl text-xs font-display font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:border-rose-500 cursor-pointer"
+              >
+                <option value="all">All Generations</option>
+                {([1, 2, 3, 4, 5, 6, 7, 8, 9] as const).map((g) => (
+                  <option key={g} value={g}>
+                    Generation {getGenerationRoman(g)}
+                  </option>
+                ))}
+              </select>
 
               <button
                 type="button"
                 onClick={() => setOnlyCaught((v) => !v)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors ${
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
                   onlyCaught
                     ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
                     : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
@@ -434,10 +435,21 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
                 Caught Only ({uniqueCaughtCount})
               </button>
             </div>
+
+            <div className="relative flex-1 sm:flex-initial">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search Pokémon…"
+                className="w-full sm:w-44 pl-7 pr-2.5 py-1.5 rounded-xl text-base sm:text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:border-rose-500"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Grid of Pokemon */}
+        {/* Grid of Pokémon */}
         <div className="p-5 overflow-y-auto flex-1">
           {filteredList.length === 0 ? (
             <div className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -449,98 +461,100 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
                 const caughtRecord = polyDex[entry.id];
                 const isCaught = Boolean(caughtRecord);
 
+                if (!isCaught) {
+                  return (
+                    <div
+                      key={entry.id}
+                      className="rounded-2xl border p-2.5 flex flex-col items-center text-center bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/60 opacity-50 select-none"
+                    >
+                      <div className="w-full text-left text-[10px] font-mono text-slate-400 mb-1">
+                        #{String(entry.id).padStart(4, '0')}
+                      </div>
+                      <div className="w-14 h-14 flex items-center justify-center my-1">
+                        <div className="w-10 h-10 rounded-full bg-slate-200/70 dark:bg-slate-800 flex items-center justify-center font-mono text-xs font-bold text-slate-400">
+                          ?
+                        </div>
+                      </div>
+                      <div className="font-display font-bold text-xs text-slate-500 dark:text-slate-400 truncate w-full">
+                        ???
+                      </div>
+                    </div>
+                  );
+                }
+
                 return (
                   <button
                     key={entry.id}
                     type="button"
-                    disabled={!isCaught}
-                    onClick={() => {
-                      if (isCaught) setSelectedPokemon(entry);
-                    }}
-                    className={`rounded-2xl border p-2.5 flex flex-col items-center text-center transition-all ${
-                      isCaught
-                        ? 'bg-white dark:bg-slate-800/90 border-emerald-500/35 hover:border-emerald-500 hover:shadow-md cursor-pointer'
-                        : 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/60 opacity-55 cursor-not-allowed'
-                    }`}
-                    title={
-                      isCaught
-                        ? `Click to view ${entry.displayName}'s final geometry`
-                        : 'Uncaught Pokémon'
-                    }
+                    onClick={() => setSelectedPokemon(entry)}
+                    className="rounded-2xl border p-2.5 flex flex-col items-center text-center transition-all bg-white dark:bg-slate-800/90 border-emerald-500/35 hover:border-emerald-500 hover:shadow-md cursor-pointer"
+                    title={`View ${entry.displayName}'s unlocked geometry`}
                   >
                     <div className="w-full flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1">
                       <span>#{String(entry.id).padStart(4, '0')}</span>
-                      {isCaught && (
-                        <div className="flex items-center gap-1">
-                          <span
-                            className={`inline-flex items-center justify-center ${
-                              caughtRecord.modesCaught.circles
-                                ? 'text-sky-400'
-                                : 'opacity-20'
-                            }`}
-                            title="Caught in Circles Mode"
+                      <div className="flex items-center gap-1">
+                        <span
+                          className={`inline-flex items-center justify-center ${
+                            caughtRecord.modesCaught.circles
+                              ? 'text-sky-400'
+                              : 'opacity-20'
+                          }`}
+                          title="Circles Mode"
+                        >
+                          <svg
+                            viewBox="0 0 16 16"
+                            className="w-3 h-3 fill-current"
                           >
-                            <svg
-                              viewBox="0 0 16 16"
-                              className="w-3 h-3 fill-current"
-                            >
-                              <circle cx="8" cy="8" r="6" />
-                            </svg>
-                          </span>
-                          <span
-                            className={`inline-flex items-center justify-center ${
-                              caughtRecord.modesCaught.triangles
-                                ? 'text-rose-400'
-                                : 'opacity-20'
-                            }`}
-                            title="Caught in Triangles Mode"
+                            <circle cx="8" cy="8" r="6" />
+                          </svg>
+                        </span>
+                        <span
+                          className={`inline-flex items-center justify-center ${
+                            caughtRecord.modesCaught.triangles
+                              ? 'text-rose-400'
+                              : 'opacity-20'
+                          }`}
+                          title="Triangles Mode"
+                        >
+                          <svg
+                            viewBox="0 0 16 16"
+                            className="w-3 h-3 fill-current"
                           >
-                            <svg
-                              viewBox="0 0 16 16"
-                              className="w-3 h-3 fill-current"
-                            >
-                              <polygon points="8,2 14,14 2,14" />
-                            </svg>
-                          </span>
-                          <span
-                            className={`inline-flex items-center justify-center ${
-                              caughtRecord.modesCaught.lines
-                                ? 'text-purple-400'
-                                : 'opacity-20'
-                            }`}
-                            title="Caught in Lines Mode"
+                            <polygon points="8,2 14,14 2,14" />
+                          </svg>
+                        </span>
+                        <span
+                          className={`inline-flex items-center justify-center ${
+                            caughtRecord.modesCaught.lines
+                              ? 'text-purple-400'
+                              : 'opacity-20'
+                          }`}
+                          title="Lines Mode"
+                        >
+                          <svg
+                            viewBox="0 0 16 16"
+                            className="w-3 h-3 stroke-current"
+                            fill="none"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
                           >
-                            <svg
-                              viewBox="0 0 16 16"
-                              className="w-3 h-3 stroke-current"
-                              fill="none"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                            >
-                              <line x1="3" y1="13" x2="13" y2="3" />
-                            </svg>
-                          </span>
-                        </div>
-                      )}
+                            <line x1="3" y1="13" x2="13" y2="3" />
+                          </svg>
+                        </span>
+                      </div>
                     </div>
 
                     <div className="w-14 h-14 flex items-center justify-center my-1">
-                      {isCaught ? (
-                        <img
-                          src={entry.officialArtworkUrl}
-                          alt={entry.displayName}
-                          loading="lazy"
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-slate-200/70 dark:bg-slate-800 flex items-center justify-center font-mono text-xs font-bold text-slate-400">
-                          ?
-                        </div>
-                      )}
+                      <img
+                        src={entry.officialArtworkUrl}
+                        alt={entry.displayName}
+                        loading="lazy"
+                        className="w-full h-full object-contain"
+                      />
                     </div>
 
                     <div className="font-display font-bold text-xs text-slate-800 dark:text-slate-200 truncate w-full">
-                      {isCaught ? entry.displayName : '???'}
+                      {entry.displayName}
                     </div>
                   </button>
                 );
@@ -591,20 +605,12 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedPokemon(null)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   aria-label="Close Geometry Preview"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Final geometric reconstructions unlocked for{' '}
-                <strong className="text-slate-900 dark:text-white">
-                  {selectedPokemon.displayName}
-                </strong>
-                . Uncaught shape modes appear as missing until solved in a daily puzzle.
-              </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <ModeGeometryPreviewCard
