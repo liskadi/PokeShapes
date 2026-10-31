@@ -27,7 +27,6 @@ export const ScannerClues: React.FC<ScannerCluesProps> = ({
       className="grid grid-cols-3 gap-2"
       aria-label="Auto-revealing Pokédex clues"
     >
-      {/* Slot 1: Generation (Auto-reveals at 3 guesses) */}
       <div
         className={`h-[54px] sm:h-[56px] w-full overflow-hidden rounded-2xl border px-2.5 sm:px-3 py-1.5 sm:py-2 flex flex-col justify-between transition-colors ${
           genUnlocked
@@ -63,7 +62,6 @@ export const ScannerClues: React.FC<ScannerCluesProps> = ({
         </div>
       </div>
 
-      {/* Slot 2: Primary Type (Auto-reveals at 5 guesses) */}
       <div
         className={`h-[54px] sm:h-[56px] w-full overflow-hidden rounded-2xl border px-2.5 sm:px-3 py-1.5 sm:py-2 flex flex-col justify-between transition-colors ${
           typeUnlocked
@@ -95,7 +93,6 @@ export const ScannerClues: React.FC<ScannerCluesProps> = ({
         </div>
       </div>
 
-      {/* Slot 3: Habitat (Auto-reveals at 7 guesses) */}
       <div
         className={`h-[54px] sm:h-[56px] w-full overflow-hidden rounded-2xl border px-2.5 sm:px-3 py-1.5 sm:py-2 flex flex-col justify-between transition-colors ${
           habitatUnlocked

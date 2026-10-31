@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Send, Loader2, Check } from 'lucide-react';
-import { getGenerationRoman } from '../api/pokeapi';
+import {
+  getDefaultVersionSpriteUrl,
+  getFallbackFrontSpriteUrl,
+  getGenerationRoman,
+} from '../api/pokeapi';
 import { PokemonIndexEntry } from '../types/pokemon';
 
 interface PokemonSearchProps {
@@ -29,7 +33,6 @@ export const PokemonSearch: React.FC<PokemonSearchProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Filter Pokemon by name or National Dex number (#)
   const filteredResults = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
     if (!trimmed) return [];
@@ -72,7 +75,6 @@ export const PokemonSearch: React.FC<PokemonSearchProps> = ({
     setHighlightedIndex(0);
   }, [filteredResults.length, query]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -134,7 +136,6 @@ export const PokemonSearch: React.FC<PokemonSearchProps> = ({
             : 'focus-within:!border-rose-500 dark:focus-within:!border-rose-500 focus-within:ring-4 focus-within:ring-rose-500/15'
         }`}
       >
-        {/* Custom Pokéball Capture Icon */}
         <svg
           viewBox="0 0 24 24"
           className={`w-6 h-6 shrink-0 transition-transform ${
@@ -223,7 +224,6 @@ export const PokemonSearch: React.FC<PokemonSearchProps> = ({
         )}
       </div>
 
-      {/* Autocomplete Suggestions Dropdown */}
       {isOpen && !disabled && query.trim().length > 0 && (
         <div className="absolute z-40 left-0 right-0 mt-2 rounded-2xl border-2 border-slate-300 dark:border-[#2C3B5E] bg-white dark:bg-[#141C2F] shadow-[0_8px_0_rgba(15,23,42,0.2)] dark:shadow-[0_8px_0_#070B14] overflow-hidden max-h-80 overflow-y-auto">
           {filteredResults.length === 0 ? (
@@ -238,6 +238,8 @@ export const PokemonSearch: React.FC<PokemonSearchProps> = ({
               {filteredResults.map((entry, idx) => {
                 const alreadyGuessed = guessedIds.has(entry.id);
                 const isHighlighted = idx === highlightedIndex;
+                const versionSprite =
+                  entry.spriteUrl || getDefaultVersionSpriteUrl(entry.id);
 
                 return (
                   <li key={entry.id} role="option" aria-selected={isHighlighted}>
@@ -255,12 +257,20 @@ export const PokemonSearch: React.FC<PokemonSearchProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="relative w-11 h-11 rounded-2xl bg-slate-100 dark:bg-[#0D1322] border border-slate-200 dark:border-[#24304d] p-1 flex items-center justify-center shrink-0 overflow-hidden">
+                        <div className="relative w-11 h-11 rounded-2xl bg-slate-100 dark:bg-[#1E2B45] border border-slate-200 dark:border-[#31456E] flex items-center justify-center shrink-0 overflow-hidden">
                           <img
-                            src={entry.officialArtworkUrl}
+                            src={versionSprite}
                             alt={entry.displayName}
                             loading="lazy"
-                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              const fallback = getFallbackFrontSpriteUrl(
+                                entry.id
+                              );
+                              if (e.currentTarget.src !== fallback) {
+                                e.currentTarget.src = fallback;
+                              }
+                            }}
+                            className="w-10 h-10 object-contain [image-rendering:pixelated] scale-110 drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]"
                           />
                         </div>
                         <div>

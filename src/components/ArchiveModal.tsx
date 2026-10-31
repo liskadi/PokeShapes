@@ -27,10 +27,6 @@ interface ArchiveModalProps {
   targetDetailsMap: Record<number, PokemonDetails>;
 }
 
-/**
- * Evenly sized 14x14 SVG primitive icons for Circles, Triangles, and Lines
- * so all three symbols have identical visual weight in the Archive list.
- */
 function renderShapeModeSvg(mode: GameMode) {
   if (mode === 'circles') {
     return (
@@ -88,9 +84,12 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="archive-modal-title"
+      onClick={onClose}
     >
-      <div className="game-card relative w-full max-w-2xl rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[92vh] flex flex-col">
-        {/* Header */}
+      <div
+        className="game-card relative w-full max-w-2xl rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[92vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="px-6 py-4 border-b-2 border-slate-200 dark:border-[#24304d] bg-diagonal-stripes flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
@@ -119,11 +118,8 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({
           </button>
         </div>
 
-        {/* Scrollable Body */}
         <div className="p-6 overflow-y-auto space-y-6">
-          {/* Section 1: Yesterday's Champions */}
           <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 p-4">
-            {/* 2-Line Header: Line 1 = Title, Line 2 = Reveal & Play Buttons */}
             <div className="flex flex-col gap-2.5 mb-3">
               <div className="flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-amber-500 shrink-0" />
@@ -211,7 +207,6 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({
             </div>
           </div>
 
-          {/* Section 2: Past Daily Archive Picker */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-display font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -263,7 +258,6 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({
                       </div>
                     </div>
 
-                    {/* 3 Evenly Sized Mode Status Badges for that Date */}
                     <div className="flex items-center gap-1.5">
                       {(['circles', 'triangles', 'lines'] as GameMode[]).map(
                         (m) => {

@@ -2,7 +2,6 @@ import * as GeometrizePkg from 'geometrizejs';
 import { GameMode, getModeShapeConfig } from '../types/game';
 import { mulberry32 } from '../utils/dailySeed';
 
-// Support both ESM and CommonJS interop from geometrizejs across Vite dev & build
 const Geometrize =
   'Bitmap' in GeometrizePkg && GeometrizePkg.Bitmap
     ? GeometrizePkg
@@ -35,14 +34,6 @@ function createRgbaInt(r: number, g: number, b: number, a: number = 255): number
   return ((r & 255) << 24) + ((g & 255) << 16) + ((b & 255) << 8) + (a & 255);
 }
 
-/**
- * 3.3 Thicker Line Rasterization Tuning for Lines Mode (50 -> 275 lines):
- * Upgrades 1px hairline strokes from SvgExporter into graduated, high-impact
- * rounded vector brush strokes:
- * - Foundational silhouette strokes (0..49): 5.8px stroke-width
- * - Mid-tier structural strokes (50..149): 4.2px stroke-width
- * - Fine detail strokes (150..274): 3.0px stroke-width
- */
 function enhanceSvgShape(rawSvg: string, mode: GameMode, stepIndex: number): string {
   if (mode === 'lines') {
     const strokeWidth =
@@ -73,10 +64,7 @@ self.onmessage = (event: MessageEvent<GeometrizeWorkerRequest>) => {
   const originalRandom = Math.random;
 
   try {
-    // Install deterministic Mulberry32 PRNG over Math.random so hill-climbing
-    // produces the exact same shapes for every player on the same day!
-    const seededRng = mulberry32(seed);
-    Math.random = seededRng;
+    Math.random = mulberry32(seed);
 
     const rgbaBytes = new Uint8ClampedArray(rgbaBuffer);
     const bitmap = Bitmap.createFromByteArray(
@@ -98,7 +86,6 @@ self.onmessage = (event: MessageEvent<GeometrizeWorkerRequest>) => {
       lines: ShapeTypes.LINE,
     };
 
-    // 3.3 Tuned candidate & mutation counts for Lines Mode vs Circles/Triangles
     const options =
       mode === 'lines'
         ? {
@@ -119,53 +106,47 @@ self.onmessage = (event: MessageEvent<GeometrizeWorkerRequest>) => {
     for (let i = 0; i < totalShapes; i++) {
       const stepResults = runner.step(options);
       const rawSvg = SvgExporter.exportShapes(stepResults);
-      const enhancedSvg = enhanceSvgShape(rawSvg, mode, i);
-      shapes.push(enhancedSvg);
+      shapes.push(enhanceSvgShape(rawSvg, mode, i));
 
-      // Stream the initial shapes immediately so the game is playable right away
       if (i + 1 === initialShapes) {
-        const msg: GeometrizeWorkerResponse = {
+        self.postMessage({
           jobId,
           type: 'INITIAL_READY',
           shapes: shapes.slice(),
           width,
           height,
-        };
-        self.postMessage(msg);
+        } satisfies GeometrizeWorkerResponse);
       } else if (
         i + 1 > initialShapes &&
         (i + 1 - initialShapes) % modeCfg.increment === 0 &&
         i + 1 < totalShapes
       ) {
-        const msg: GeometrizeWorkerResponse = {
+        self.postMessage({
           jobId,
           type: 'PROGRESS',
           shapes: shapes.slice(),
           width,
           height,
-        };
-        self.postMessage(msg);
+        } satisfies GeometrizeWorkerResponse);
       }
     }
 
-    const doneMsg: GeometrizeWorkerResponse = {
+    self.postMessage({
       jobId,
       type: 'COMPLETE',
       shapes,
       width,
       height,
-    };
-    self.postMessage(doneMsg);
+    } satisfies GeometrizeWorkerResponse);
   } catch (err) {
-    const errMsg: GeometrizeWorkerResponse = {
+    self.postMessage({
       jobId,
       type: 'ERROR',
       shapes: [],
       width,
       height,
       error: err instanceof Error ? err.message : String(err),
-    };
-    self.postMessage(errMsg);
+    } satisfies GeometrizeWorkerResponse);
   } finally {
     Math.random = originalRandom;
   }

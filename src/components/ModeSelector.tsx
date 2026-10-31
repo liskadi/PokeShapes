@@ -109,7 +109,6 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
               </span>
             </div>
 
-            {/* Single Clean Status Indicator */}
             {state.status === 'won' && (
               <span
                 className="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full badge-exact border-2 shrink-0"

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Calendar,
   Clock,
@@ -75,7 +75,6 @@ export function App() {
     canvasSize,
     croppedArtworkDataUrl,
     isInitialLoading,
-    isBackgroundComputing,
     error,
     retry,
   } = useGeometrize({
@@ -87,7 +86,6 @@ export function App() {
     backgroundTasks: backgroundPrewarmTasks,
   });
 
-  // Modals state
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState<boolean>(
     () => !hasSeenOnboarding()
   );
@@ -109,15 +107,13 @@ export function App() {
 
   const handleNextMode = () => {
     const currentIdx = MODE_ORDER.indexOf(activeMode);
-    const nextMode = MODE_ORDER[(currentIdx + 1) % MODE_ORDER.length];
-    selectMode(nextMode);
+    selectMode(MODE_ORDER[(currentIdx + 1) % MODE_ORDER.length]);
   };
 
   const isArchiveDate = selectedDailyDateKey !== currentDateKey;
 
   return (
     <div className="min-h-screen flex flex-col bg-pokeball-wallpaper text-slate-900 dark:text-slate-100 transition-colors">
-      {/* Top Navigation Header */}
       <Header
         puzzleNumber={dailyState.puzzleNumber}
         isArchiveDate={isArchiveDate}
@@ -136,7 +132,6 @@ export function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      {/* Midnight Live Rollover Notification */}
       {rolloverBanner && (
         <div className="bg-sky-500/15 border-b border-sky-500/30 px-4 py-2 text-center text-xs font-medium text-sky-600 dark:text-sky-300 flex items-center justify-center gap-3">
           <span>{rolloverBanner}</span>
@@ -150,7 +145,6 @@ export function App() {
         </div>
       )}
 
-      {/* Past Daily Archive Active Banner */}
       {isArchiveDate && (
         <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-xs font-medium text-amber-700 dark:text-amber-300">
           <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
@@ -184,30 +178,23 @@ export function App() {
         </div>
       )}
 
-      {/* Main Content Container */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-3 py-3 sm:px-4 sm:py-6 space-y-3.5 sm:space-y-5">
-        {/* 3 Shape Game Modes Selector (Circles, Triangles, Lines) */}
         <ModeSelector
           activeMode={activeMode}
           modesState={dailyState.modes}
           onSelectMode={selectMode}
         />
 
-        {/* Responsive Game Arena Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 lg:gap-6 items-start">
-          {/* Left Column: Geometrize Scanner Viewport */}
           <div className="lg:col-span-6">
             <GeometrizeCanvas
               mode={activeMode}
               status={currentModeState.status}
-              gaveUp={currentModeState.gaveUp}
               shapes={shapes}
               canvasSize={canvasSize}
               croppedArtworkDataUrl={croppedArtworkDataUrl}
               unlockedShapeCount={unlockedShapeCount}
-              guessesUsed={currentModeState.guesses.length}
               isInitialLoading={isInitialLoading || !targetPokemon}
-              isBackgroundComputing={isBackgroundComputing}
               error={error}
               onRetry={retry}
               targetPokemon={targetPokemon}
@@ -219,9 +206,7 @@ export function App() {
             />
           </div>
 
-          {/* Right Column: Scanner Clues, Search Combobox & Guess Log */}
           <div className="lg:col-span-6 space-y-3 sm:space-y-4">
-            {/* 2.1 Progressive Scanner Clues (3 Wrong = Gen, 5 Wrong = Primary Type, 7 Wrong = Habitat + Official Cry) */}
             <ScannerClues
               wrongGuessesCount={wrongGuessesCount}
               status={currentModeState.status}
@@ -242,25 +227,18 @@ export function App() {
               onSubmitGuess={submitGuess}
             />
 
-            <GuessList
-              mode={activeMode}
-              guesses={currentModeState.guesses}
-            />
+            <GuessList guesses={currentModeState.guesses} />
           </div>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="border-t-2 border-slate-300 dark:border-[#2C3E63] py-5 px-4 text-xs text-slate-600 dark:text-slate-400 bg-white/90 dark:bg-[#11182B]/90 backdrop-blur-xs">
         <div className="max-w-5xl mx-auto space-y-3">
-          {/* Top Row: Left Project Version/Year, Center Action Buttons, Right Geometrize Credit */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-            {/* Left: Project Name - Version - Year */}
             <div className="font-display font-bold text-sm text-slate-800 dark:text-slate-200 whitespace-nowrap">
               PokéShapes - v1.0.0 - 2026
             </div>
 
-            {/* Center: Action Icon Buttons with Hover Text */}
             <div className="flex items-center justify-center gap-2">
               <a
                 href="mailto:?subject=Pok%C3%A9Shapes%20Feedback%20%26%20Bugs"
@@ -304,7 +282,6 @@ export function App() {
               </button>
             </div>
 
-            {/* Right: Next Daily Timer + Powered by geometrize */}
             <div className="flex flex-wrap items-center justify-center md:justify-end gap-2.5 whitespace-nowrap font-medium">
               <span
                 className="inline-flex items-center gap-1 font-mono text-xs text-slate-500 dark:text-slate-400"
@@ -333,7 +310,6 @@ export function App() {
             </div>
           </div>
 
-          {/* Bottom Row: Legal & Trademark Disclaimer */}
           <p className="text-[11px] leading-relaxed text-center text-slate-400 dark:text-slate-500 max-w-4xl mx-auto">
             PokéShapes is an unofficial fan-made project and is not affiliated with,
             endorsed, sponsored, or approved by Nintendo, Creatures Inc., GAME
@@ -346,7 +322,6 @@ export function App() {
         </div>
       </footer>
 
-      {/* Modals */}
       <HowToPlayModal
         isOpen={isHowToPlayOpen}
         onClose={handleCloseHowToPlay}
@@ -390,4 +365,5 @@ export function App() {
     </div>
   );
 }
+
 export default App;

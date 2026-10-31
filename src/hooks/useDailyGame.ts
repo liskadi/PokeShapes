@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import confetti from 'canvas-confetti';
-import {
-  comparePokemonAttributes,
-  fetchPokemonDetails,
-  fetchPokemonIndex,
-} from '../api/pokeapi';
+import { fetchPokemonDetails, fetchPokemonIndex } from '../api/pokeapi';
 import {
   AllStats,
   DailyGameState,
@@ -45,50 +41,38 @@ export function useDailyGame({
   soundEnabled,
 }: UseDailyGameParams) {
   const [activeMode, setActiveMode] = useState<GameMode>('triangles');
-
-  // 2.3 Active Daily Date Key (defaults to Today `currentDateKey`, or any Past Archive Date)
   const [selectedDailyDateKey, setSelectedDailyDateKey] =
     useState<string>(currentDateKey);
 
-  // Master Pokemon directory for autocomplete
   const [pokemonIndex, setPokemonIndex] = useState<PokemonIndexEntry[]>([]);
   const [isIndexLoading, setIsIndexLoading] = useState<boolean>(true);
 
-  // Daily state for the selected daily date (Today or Archive Date)
   const [dailyState, setDailyState] = useState<DailyGameState>(() =>
     loadDailyState(currentDateKey, true)
   );
-
-  // Lifetime statistics & Personal PolyDex Collection
   const [stats, setStats] = useState<AllStats>(() => loadStats(currentDateKey));
   const [polyDex, setPolyDex] = useState<PolyDexMap>(() => loadPolyDex());
 
-  // Target Pokemon details cache
   const [targetDetailsMap, setTargetDetailsMap] = useState<
     Record<number, PokemonDetails>
   >({});
   const [isSubmittingGuess, setIsSubmittingGuess] = useState<boolean>(false);
 
-  // Re-sync Daily State & Stats whenever currentDateKey rolls over at midnight
   useEffect(() => {
     setSelectedDailyDateKey(currentDateKey);
-    const freshDaily = loadDailyState(currentDateKey, true);
-    setDailyState(freshDaily);
+    setDailyState(loadDailyState(currentDateKey, true));
     setStats(loadStats(currentDateKey));
   }, [currentDateKey]);
 
-  // Switch between Today or any Past Archive Date
   const selectArchiveDate = useCallback(
     (dateKey: string) => {
       soundEngine.playClick(soundEnabled);
       setSelectedDailyDateKey(dateKey);
-      const isToday = dateKey === currentDateKey;
-      setDailyState(loadDailyState(dateKey, isToday));
+      setDailyState(loadDailyState(dateKey, dateKey === currentDateKey));
     },
     [currentDateKey, soundEnabled]
   );
 
-  // Load master Pokemon index on mount
   useEffect(() => {
     let mounted = true;
     setIsIndexLoading(true);
@@ -109,7 +93,6 @@ export function useDailyGame({
     };
   }, []);
 
-  // Active mode state for the currently selected Daily / Archive date
   const currentModeState: ModeGameState = dailyState.modes[activeMode];
   const activeShapeConfig = getModeShapeConfig(activeMode);
 
@@ -117,7 +100,6 @@ export function useDailyGame({
   const targetPokemon: PokemonDetails | null =
     targetDetailsMap[targetPokemonId] || null;
 
-  // 2.3 Yesterday's Champions metadata
   const yesterdayDateKey = useMemo(
     () => getOffsetDateKey(currentDateKey, -1),
     [currentDateKey]
@@ -131,7 +113,6 @@ export function useDailyGame({
     [yesterdayDateKey]
   );
 
-  // Preload target Pokemon details for all 3 daily modes + yesterday's modes
   useEffect(() => {
     const idsToLoad = new Set<number>([
       dailyState.modes.circles.targetPokemonId,
@@ -156,7 +137,6 @@ export function useDailyGame({
     });
   }, [dailyState, yesterdayTargets, targetPokemonId, targetDetailsMap]);
 
-  // 3.2 Background Prewarm Tasks for the other 2 Daily Modes
   const backgroundPrewarmTasks = useMemo<BackgroundPrewarmTask[]>(() => {
     const tasks: BackgroundPrewarmTask[] = [];
     (['circles', 'triangles', 'lines'] as GameMode[]).forEach((m) => {
@@ -176,10 +156,8 @@ export function useDailyGame({
     return tasks;
   }, [activeMode, dailyState.modes, targetDetailsMap]);
 
-  // Compute how many shapes are currently unlocked by mode-specific rules:
-  // Circles: 20 + 20 * wrong, Triangles: 20 + 10 * wrong, Lines: 50 + 25 * wrong
   const wrongGuessesCount = currentModeState.guesses.filter(
-    (g) => !g.comparison.isCorrect
+    (g) => !g.isCorrect
   ).length;
 
   const unlockedShapeCount =
@@ -196,21 +174,13 @@ export function useDailyGame({
     MAX_GUESSES - currentModeState.guesses.length
   );
 
-  // Submit a Pokemon guess
   const submitGuess = useCallback(
     async (guessedPokemonId: number) => {
       if (
         isSubmittingGuess ||
         currentModeState.status !== 'playing' ||
-        !targetPokemon
-      ) {
-        return;
-      }
-
-      if (
-        currentModeState.guesses.some(
-          (g) => g.pokemon.id === guessedPokemonId
-        )
+        !targetPokemon ||
+        currentModeState.guesses.some((g) => g.pokemon.id === guessedPokemonId)
       ) {
         return;
       }
@@ -218,35 +188,18 @@ export function useDailyGame({
       setIsSubmittingGuess(true);
       try {
         const guessedDetails = await fetchPokemonDetails(guessedPokemonId);
-        const comparison = comparePokemonAttributes(
-          guessedDetails,
-          targetPokemon
-        );
-
-        const nextGuessNumber = currentModeState.guesses.length + 1;
-        const nextWrongCount = comparison.isCorrect
-          ? wrongGuessesCount
-          : wrongGuessesCount + 1;
-        const shapesUnlockedAfter = comparison.isCorrect
-          ? activeShapeConfig.maxShapes
-          : Math.min(
-              activeShapeConfig.maxShapes,
-              activeShapeConfig.initialShapes +
-                nextWrongCount * activeShapeConfig.increment
-            );
+        const isCorrect = guessedDetails.id === targetPokemon.id;
 
         const newGuess: GuessRecord = {
           pokemon: guessedDetails,
-          comparison,
-          guessNumber: nextGuessNumber,
-          shapesUnlockedAfter,
-          timestamp: Date.now(),
+          isCorrect,
+          guessNumber: currentModeState.guesses.length + 1,
         };
 
         const updatedGuesses = [...currentModeState.guesses, newGuess];
         let nextStatus: GameStatus = 'playing';
 
-        if (comparison.isCorrect) {
+        if (isCorrect) {
           nextStatus = 'won';
         } else if (updatedGuesses.length >= MAX_GUESSES) {
           nextStatus = 'lost';
@@ -256,8 +209,6 @@ export function useDailyGame({
           ...currentModeState,
           guesses: updatedGuesses,
           status: nextStatus,
-          completedAt:
-            nextStatus !== 'playing' ? Date.now() : currentModeState.completedAt,
         };
 
         const isToday = dailyState.dateKey === currentDateKey;
@@ -272,31 +223,30 @@ export function useDailyGame({
         setDailyState(nextDailyState);
         saveDailyState(nextDailyState, isToday);
 
-        // Playing past archive puzzles does NOT affect Stats, Streaks, PolyDex, or Trainer Rank!
         if (isToday && (nextStatus === 'won' || nextStatus === 'lost')) {
-          const updatedStats = recordDailyGameResult(
-            stats,
-            activeMode,
-            dailyState.dateKey,
-            nextStatus === 'won',
-            updatedGuesses.length,
-            nextModes,
-            true
+          setStats(
+            recordDailyGameResult(
+              stats,
+              activeMode,
+              dailyState.dateKey,
+              nextStatus === 'won',
+              updatedGuesses.length,
+              nextModes
+            )
           );
-          setStats(updatedStats);
         }
 
         if (isToday && nextStatus === 'won') {
-          const updatedDex = recordPolyDexCatch(
-            polyDex,
-            targetPokemon.id,
-            activeMode,
-            dailyState.dateKey
+          setPolyDex(
+            recordPolyDexCatch(
+              polyDex,
+              targetPokemon.id,
+              activeMode,
+              dailyState.dateKey
+            )
           );
-          setPolyDex(updatedDex);
         }
 
-        // Audio & visual feedback
         if (nextStatus === 'won') {
           soundEngine.playWinFanfare(soundEnabled);
           if (soundEnabled && targetPokemon.cryUrl) {
@@ -324,8 +274,6 @@ export function useDailyGame({
       isSubmittingGuess,
       currentModeState,
       targetPokemon,
-      wrongGuessesCount,
-      activeShapeConfig,
       dailyState,
       currentDateKey,
       activeMode,
@@ -335,10 +283,6 @@ export function useDailyGame({
     ]
   );
 
-  /**
-   * 2.5 Give Up / Reveal Answer
-   * Playing past archive puzzles does NOT affect Stats or Streaks!
-   */
   const giveUpCurrentGame = useCallback(() => {
     if (currentModeState.status !== 'playing') return;
 
@@ -346,7 +290,6 @@ export function useDailyGame({
       ...currentModeState,
       status: 'lost',
       gaveUp: true,
-      completedAt: Date.now(),
     };
 
     const isToday = dailyState.dateKey === currentDateKey;
@@ -362,16 +305,16 @@ export function useDailyGame({
     saveDailyState(nextDailyState, isToday);
 
     if (isToday) {
-      const updatedStats = recordDailyGameResult(
-        stats,
-        activeMode,
-        dailyState.dateKey,
-        false,
-        currentModeState.guesses.length || MAX_GUESSES,
-        nextModes,
-        true
+      setStats(
+        recordDailyGameResult(
+          stats,
+          activeMode,
+          dailyState.dateKey,
+          false,
+          currentModeState.guesses.length || MAX_GUESSES,
+          nextModes
+        )
       );
-      setStats(updatedStats);
     }
 
     soundEngine.playGameOver(soundEnabled);
@@ -395,8 +338,7 @@ export function useDailyGame({
   const resetAllGameData = useCallback(async () => {
     await clearAllUserData();
     setSelectedDailyDateKey(currentDateKey);
-    const freshDaily = loadDailyState(currentDateKey, true);
-    setDailyState(freshDaily);
+    setDailyState(loadDailyState(currentDateKey, true));
     setStats(createDefaultStats());
     setPolyDex({});
   }, [currentDateKey]);

@@ -1,22 +1,22 @@
-import {
-  DirectionHint,
-  GuessComparison,
-  MatchStatus,
-  PokemonDetails,
-  PokemonIndexEntry,
-} from '../types/pokemon';
+import { PokemonDetails, PokemonIndexEntry } from '../types/pokemon';
 import { TOTAL_MAINLINE_POKEMON } from '../utils/dailySeed';
 
 const POKEAPI_BASE = 'https://pokeapi.co/api/v2';
-const INDEX_CACHE_KEY = 'pokeshapes:pokemon-index-v1';
-const DETAILS_CACHE_PREFIX = 'pokeshapes:pokemon-detail-v3:';
+const INDEX_CACHE_KEY = 'pokeshapes:pokemon-index-v2';
+const DETAILS_CACHE_PREFIX = 'pokeshapes:pokemon-detail-v4:';
 
 const memoryDetailsCache = new Map<number, PokemonDetails>();
 let memoryIndexCache: PokemonIndexEntry[] | null = null;
 
-/**
- * Determines the Pokemon Generation (1-9) from its National Pokedex ID.
- */
+// Clean up legacy v1 index cache so all users immediately get version sprite URLs
+(function purgeLegacyIndexCache() {
+  try {
+    localStorage.removeItem('pokeshapes:pokemon-index-v1');
+  } catch {
+    // Ignore storage error
+  }
+})();
+
 export function getGenerationById(id: number): number {
   if (id <= 151) return 1;
   if (id <= 251) return 2;
@@ -49,23 +49,20 @@ export function getRegionByGeneration(gen: number): string {
   return regions[gen] || 'Unknown';
 }
 
-/**
- * Formats a habitat slug or derives a rich ecological habitat when PokeAPI species.habitat is null (Gen 4-9).
- */
 export function formatHabitat(
   rawHabitat: string | null | undefined,
   types: string[]
 ): string {
   if (rawHabitat) {
     const map: Record<string, string> = {
-      'cave': 'Cave',
-      'forest': 'Forest',
-      'grassland': 'Grassland',
-      'mountain': 'Mountain',
-      'rare': 'Rare Sanctuary',
+      cave: 'Cave',
+      forest: 'Forest',
+      grassland: 'Grassland',
+      mountain: 'Mountain',
+      rare: 'Rare Sanctuary',
       'rough-terrain': 'Rough Terrain',
-      'sea': 'Sea',
-      'urban': 'Urban',
+      sea: 'Sea',
+      urban: 'Urban',
       'waters-edge': "Water's Edge",
     };
     if (map[rawHabitat]) return map[rawHabitat];
@@ -75,7 +72,7 @@ export function formatHabitat(
       .join(' ');
   }
 
-  // Concise single-phrase fallback habitat inferred from primary type for Gen 4-9 species
+  // PokéAPI only populates species.habitat for Gen 1-3; infer a fitting habitat from primary type for Gen 4-9
   const primary = types[0] || 'normal';
   const typeHabitatMap: Record<string, string> = {
     water: "Water's Edge",
@@ -100,9 +97,6 @@ export function formatHabitat(
   return typeHabitatMap[primary] || 'Grassland';
 }
 
-/**
- * Formats a PokeAPI slug name into a human-friendly Pokemon display name.
- */
 export function formatPokemonName(slug: string): string {
   const specialNames: Record<string, string> = {
     'nidoran-f': 'Nidoran♀',
@@ -110,8 +104,8 @@ export function formatPokemonName(slug: string): string {
     'mr-mime': 'Mr. Mime',
     'mr-rime': 'Mr. Rime',
     'mime-jr': 'Mime Jr.',
-    'farfetchd': "Farfetch'd",
-    'sirfetchd': "Sirfetch'd",
+    farfetchd: "Farfetch'd",
+    sirfetchd: "Sirfetch'd",
     'ho-oh': 'Ho-Oh',
     'porygon-z': 'Porygon-Z',
     'type-null': 'Type: Null',
@@ -122,7 +116,7 @@ export function formatPokemonName(slug: string): string {
     'tapu-lele': 'Tapu Lele',
     'tapu-bulu': 'Tapu Bulu',
     'tapu-fini': 'Tapu Fini',
-    'flabebe': 'Flabébé',
+    flabebe: 'Flabébé',
     'chi-yu': 'Chi-Yu',
     'chien-pao': 'Chien-Pao',
     'ting-lu': 'Ting-Lu',
@@ -176,16 +170,22 @@ export function formatPokemonName(slug: string): string {
     .join(' ');
 }
 
-/**
- * Constructs the default Official Artwork URL matching PokeAPI's `sprites.other['official-artwork'].front_default`.
- */
 export function getDefaultOfficialArtworkUrl(id: number): string {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 }
 
 /**
- * Fetches the master directory of all 1,025 Pokemon from PokeAPI v2.
+ * Returns the 2D pixel sprite from `sprites.versions['generation-v']['black-white'].front_default`
+ * (which covers all 1,025 Pokémon in PokéAPI), distinct from the official artwork used for geometrization.
  */
+export function getDefaultVersionSpriteUrl(id: number): string {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${id}.png`;
+}
+
+export function getFallbackFrontSpriteUrl(id: number): string {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+}
+
 export async function fetchPokemonIndex(): Promise<PokemonIndexEntry[]> {
   if (memoryIndexCache && memoryIndexCache.length > 0) {
     return memoryIndexCache;
@@ -195,20 +195,24 @@ export async function fetchPokemonIndex(): Promise<PokemonIndexEntry[]> {
     const cachedRaw = localStorage.getItem(INDEX_CACHE_KEY);
     if (cachedRaw) {
       const parsed = JSON.parse(cachedRaw) as PokemonIndexEntry[];
-      if (Array.isArray(parsed) && parsed.length >= 1000) {
+      if (
+        Array.isArray(parsed) &&
+        parsed.length >= 1000 &&
+        parsed[0]?.spriteUrl
+      ) {
         memoryIndexCache = parsed;
         return parsed;
       }
     }
   } catch {
-    // Ignore localStorage parse error and refetch
+    // Fall through to network fetch
   }
 
   const response = await fetch(
     `${POKEAPI_BASE}/pokemon?limit=${TOTAL_MAINLINE_POKEMON}&offset=0`
   );
   if (!response.ok) {
-    throw new Error(`PokéAPI index request failed with status ${response.status}`);
+    throw new Error(`PokéAPI index request failed (${response.status})`);
   }
 
   const data = await response.json();
@@ -222,6 +226,7 @@ export async function fetchPokemonIndex(): Promise<PokemonIndexEntry[]> {
         displayName: formatPokemonName(item.name),
         generation: getGenerationById(id),
         officialArtworkUrl: getDefaultOfficialArtworkUrl(id),
+        spriteUrl: getDefaultVersionSpriteUrl(id),
       };
     }
   );
@@ -230,34 +235,33 @@ export async function fetchPokemonIndex(): Promise<PokemonIndexEntry[]> {
   try {
     localStorage.setItem(INDEX_CACHE_KEY, JSON.stringify(entries));
   } catch {
-    // Storage quota full, ignore
+    // Storage quota full
   }
 
   return entries;
 }
 
-/**
- * Fetches full Pokemon details from `GET https://pokeapi.co/api/v2/pokemon/{id}`
- * and species habitat/genus from `GET https://pokeapi.co/api/v2/pokemon-species/{id}`.
- * Explicitly extracts `sprites.other['official-artwork'].front_default`.
- */
 export async function fetchPokemonDetails(id: number): Promise<PokemonDetails> {
-  if (memoryDetailsCache.has(id)) {
-    return memoryDetailsCache.get(id)!;
-  }
+  const cachedMem = memoryDetailsCache.get(id);
+  if (cachedMem) return cachedMem;
 
   const storageKey = `${DETAILS_CACHE_PREFIX}${id}`;
   try {
     const cached = localStorage.getItem(storageKey);
     if (cached) {
       const parsed = JSON.parse(cached) as PokemonDetails;
-      if (parsed && parsed.id === id && parsed.officialArtworkUrl && parsed.habitat) {
+      if (
+        parsed?.id === id &&
+        parsed.officialArtworkUrl &&
+        parsed.spriteUrl &&
+        parsed.habitat
+      ) {
         memoryDetailsCache.set(id, parsed);
         return parsed;
       }
     }
   } catch {
-    // Ignore cache error
+    // Fall through to network fetch
   }
 
   const [pokemonRes, speciesRes] = await Promise.all([
@@ -266,34 +270,30 @@ export async function fetchPokemonDetails(id: number): Promise<PokemonDetails> {
   ]);
 
   if (!pokemonRes.ok) {
-    throw new Error(`PokéAPI pokemon/${id} failed with status ${pokemonRes.status}`);
+    throw new Error(`PokéAPI pokemon/${id} failed (${pokemonRes.status})`);
   }
 
   const raw = await pokemonRes.json();
   let rawHabitat: string | null = null;
-  let genus: string | undefined = undefined;
 
-  if (speciesRes && speciesRes.ok) {
+  if (speciesRes?.ok) {
     try {
       const speciesData = await speciesRes.json();
       rawHabitat = speciesData?.habitat?.name || null;
-      const enGenus = (speciesData?.genera || []).find(
-        (g: { language?: { name?: string }; genus?: string }) =>
-          g.language?.name === 'en'
-      );
-      if (enGenus?.genus) {
-        genus = enGenus.genus;
-      }
     } catch {
-      // Ignore species parse error
+      // Optional species metadata
     }
   }
 
-  // Extract from pokemon -> sprites -> other -> official-artwork -> front_default
   const officialArtworkUrl: string =
     raw?.sprites?.other?.['official-artwork']?.front_default ||
     raw?.sprites?.front_default ||
     getDefaultOfficialArtworkUrl(id);
+
+  const spriteUrl: string =
+    raw?.sprites?.versions?.['generation-v']?.['black-white']?.front_default ||
+    raw?.sprites?.front_default ||
+    getDefaultVersionSpriteUrl(id);
 
   const types: string[] = Array.isArray(raw?.types)
     ? raw.types
@@ -310,11 +310,9 @@ export async function fetchPokemonDetails(id: number): Promise<PokemonDetails> {
     generation,
     regionName: getRegionByGeneration(generation),
     types,
-    heightMeters: Number(((raw.height || 10) / 10).toFixed(1)),
-    weightKg: Number(((raw.weight || 100) / 10).toFixed(1)),
     habitat: formatHabitat(rawHabitat, types),
-    genus,
     officialArtworkUrl,
+    spriteUrl,
     cryUrl: raw?.cries?.latest || undefined,
   };
 
@@ -322,18 +320,15 @@ export async function fetchPokemonDetails(id: number): Promise<PokemonDetails> {
   try {
     localStorage.setItem(storageKey, JSON.stringify(details));
   } catch {
-    // Ignore storage quota error
+    // Storage quota full
   }
 
   return details;
 }
 
 /**
- * 3.1 Alpha Bounding-Box Auto-Crop Before Geometrization:
- * Scans the source official artwork PNG for non-transparent pixels (alpha > 16),
- * computes the tight bounding box (xMin, yMin, xMax, yMax), and scales/centers the
- * Pokémon so its largest dimension always fills 88% of the `targetSize` canvas.
- * Also returns a `croppedArtworkDataUrl` so the post-game comparison slider aligns 1:1.
+ * Auto-crops transparent padding around the sprite so the Pokémon fills 88% of `targetSize`,
+ * and returns both the RGBA byte buffer for Geometrize and a matching high-res transparent data URL.
  */
 export async function loadArtworkBitmapBytes(
   imageUrl: string,
@@ -354,7 +349,6 @@ export async function loadArtworkBitmapBytes(
         const srcW = img.naturalWidth || img.width || 475;
         const srcH = img.naturalHeight || img.height || 475;
 
-        // 1. Draw onto temporary source canvas to compute tight alpha bounding box
         const srcCanvas = document.createElement('canvas');
         srcCanvas.width = srcW;
         srcCanvas.height = srcH;
@@ -374,8 +368,7 @@ export async function loadArtworkBitmapBytes(
 
         for (let y = 0; y < srcH; y++) {
           for (let x = 0; x < srcW; x++) {
-            const alpha = srcData[(y * srcW + x) * 4 + 3];
-            if (alpha > 16) {
+            if (srcData[(y * srcW + x) * 4 + 3] > 16) {
               if (x < xMin) xMin = x;
               if (x > xMax) xMax = x;
               if (y < yMin) yMin = y;
@@ -395,7 +388,6 @@ export async function loadArtworkBitmapBytes(
         const cropW = Math.max(1, xMax - xMin + 1);
         const cropH = Math.max(1, yMax - yMin + 1);
 
-        // 2. Scale bounding box so longest dimension occupies 88% of targetSize
         const usableSpan = targetSize * 0.88;
         const scale = usableSpan / Math.max(cropW, cropH);
         const destW = cropW * scale;
@@ -403,7 +395,6 @@ export async function loadArtworkBitmapBytes(
         const destX = (targetSize - destW) / 2;
         const destY = (targetSize - destH) / 2;
 
-        // 3. Render onto solid background canvas for Geometrize ImageRunner
         const canvas = document.createElement('canvas');
         canvas.width = targetSize;
         canvas.height = targetSize;
@@ -419,8 +410,6 @@ export async function loadArtworkBitmapBytes(
 
         const imageData = ctx.getImageData(0, 0, targetSize, targetSize);
 
-        // 4. Also create a high-res transparent overlay data URL with the exact same crop/centering
-        // so the post-game Official Artwork comparison slider aligns pixel-for-pixel!
         const overlaySize = 360;
         const overlayCanvas = document.createElement('canvas');
         overlayCanvas.width = overlaySize;
@@ -440,13 +429,12 @@ export async function loadArtworkBitmapBytes(
             destH * ratio
           );
         }
-        const croppedArtworkDataUrl = overlayCanvas.toDataURL('image/png');
 
         resolve({
           width: targetSize,
           height: targetSize,
           rgbaBytes: imageData.data,
-          croppedArtworkDataUrl,
+          croppedArtworkDataUrl: overlayCanvas.toDataURL('image/png'),
         });
       } catch (err) {
         reject(err);
@@ -454,87 +442,9 @@ export async function loadArtworkBitmapBytes(
     };
 
     img.onerror = () => {
-      reject(new Error(`Failed to load Pokémon official artwork from ${imageUrl}`));
+      reject(new Error(`Failed to load Pokémon artwork from ${imageUrl}`));
     };
 
     img.src = imageUrl;
   });
-}
-
-/**
- * Compares a guessed Pokemon against the target Pokemon for attribute hint badges.
- */
-export function comparePokemonAttributes(
-  guessed: PokemonDetails,
-  target: PokemonDetails
-): GuessComparison {
-  const isCorrect = guessed.id === target.id;
-
-  // Generation
-  const generationMatch: MatchStatus =
-    guessed.generation === target.generation
-      ? 'exact'
-      : Math.abs(guessed.generation - target.generation) === 1
-      ? 'partial'
-      : 'none';
-  const generationDirection: DirectionHint =
-    target.generation === guessed.generation
-      ? 'equal'
-      : target.generation > guessed.generation
-      ? 'higher'
-      : 'lower';
-
-  // Types
-  const sharedTypes = guessed.types.filter((t) => target.types.includes(t));
-  let typesMatch: MatchStatus = 'none';
-  if (
-    sharedTypes.length === target.types.length &&
-    guessed.types.length === target.types.length
-  ) {
-    typesMatch = 'exact';
-  } else if (sharedTypes.length > 0) {
-    typesMatch = 'partial';
-  }
-
-  // Height
-  const heightDiff = Math.abs(guessed.heightMeters - target.heightMeters);
-  const heightMatch: MatchStatus =
-    heightDiff < 0.05 ? 'exact' : heightDiff <= 0.4 ? 'partial' : 'none';
-  const heightDirection: DirectionHint =
-    heightDiff < 0.05
-      ? 'equal'
-      : target.heightMeters > guessed.heightMeters
-      ? 'higher'
-      : 'lower';
-
-  // Weight
-  const weightDiff = Math.abs(guessed.weightKg - target.weightKg);
-  const weightMatch: MatchStatus =
-    weightDiff < 0.1 ? 'exact' : weightDiff <= 8.0 ? 'partial' : 'none';
-  const weightDirection: DirectionHint =
-    weightDiff < 0.1
-      ? 'equal'
-      : target.weightKg > guessed.weightKg
-      ? 'higher'
-      : 'lower';
-
-  const dexDirection: DirectionHint =
-    target.id === guessed.id
-      ? 'equal'
-      : target.id > guessed.id
-      ? 'higher'
-      : 'lower';
-
-  return {
-    isCorrect,
-    generationMatch,
-    generationDirection,
-    typesMatch,
-    sharedTypes,
-    heightMatch,
-    heightDirection,
-    weightMatch,
-    weightDirection,
-    dexDirection,
-  };
 }

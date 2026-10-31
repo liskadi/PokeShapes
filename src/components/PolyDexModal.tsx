@@ -51,10 +51,6 @@ interface ModePreviewBoxProps {
   caughtRecord: PolyDexEntry;
 }
 
-/**
- * Renders either the final geometrized SVG portrait (if caught in that mode)
- * or a "Missing" placeholder card (if not yet caught in that mode).
- */
 const ModeGeometryPreviewCard: React.FC<ModePreviewBoxProps> = ({
   mode,
   label,
@@ -109,6 +105,11 @@ const ModeGeometryPreviewCard: React.FC<ModePreviewBoxProps> = ({
         activeWorker = worker;
         const jobId = `polydex:${cacheKey}:${Date.now()}`;
 
+        const cleanup = () => {
+          worker.terminate();
+          activeWorker = null;
+        };
+
         worker.onmessage = (e: MessageEvent<GeometrizeWorkerResponse>) => {
           if (cancelled || e.data.jobId !== jobId) return;
           if (e.data.type === 'COMPLETE') {
@@ -119,19 +120,16 @@ const ModeGeometryPreviewCard: React.FC<ModePreviewBoxProps> = ({
               e.data.shapes,
               `${CACHE_VERSION}:${dateKey}`
             );
-            worker.terminate();
-            activeWorker = null;
+            cleanup();
           } else if (e.data.type === 'ERROR') {
             setIsLoading(false);
-            worker.terminate();
-            activeWorker = null;
+            cleanup();
           }
         };
 
         worker.onerror = () => {
           if (!cancelled) setIsLoading(false);
-          worker.terminate();
-          activeWorker = null;
+          cleanup();
         };
 
         const bufferCopy = rgbaBytes.buffer.slice(0);
@@ -283,9 +281,12 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="polydex-modal-title"
+      onClick={onClose}
     >
-      <div className="game-card relative w-full max-w-3xl rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[92vh] flex flex-col">
-        {/* Header */}
+      <div
+        className="game-card relative w-full max-w-3xl rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[92vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="px-6 py-4 border-b-2 border-slate-200 dark:border-[#24304d] bg-diagonal-stripes flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
@@ -314,7 +315,6 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
           </button>
         </div>
 
-        {/* Trainer Rank Banner & Filter Bar */}
         <div className="px-6 py-3.5 bg-slate-50/80 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -359,7 +359,6 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
             </div>
           </div>
 
-          {/* Rank Progress Bar */}
           <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500 transition-all duration-300"
@@ -367,7 +366,6 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
             />
           </div>
 
-          {/* Collapsible Trainer Ranks Ladder */}
           {showRanks && (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5 pt-1">
               {TRAINER_RANKS.map((r) => {
@@ -401,7 +399,6 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
             </div>
           )}
 
-          {/* Compact Filter Controls: 1 Generation Dropdown + Search + Caught Only Toggle */}
           <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
             <div className="flex items-center gap-2">
               <select
@@ -449,7 +446,6 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
           </div>
         </div>
 
-        {/* Grid of Pokémon */}
         <div className="p-5 overflow-y-auto flex-1">
           {filteredList.length === 0 ? (
             <div className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -568,7 +564,6 @@ export const PolyDexModal: React.FC<PolyDexModalProps> = ({
           )}
         </div>
 
-        {/* Popup Sub-Modal: Final Geometry Showcase for Clicked Caught Pokémon */}
         {selectedPokemon && selectedCaughtRecord && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-pop"

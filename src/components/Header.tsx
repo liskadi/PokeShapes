@@ -41,7 +41,6 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="sticky top-0 z-30 border-b-2 border-slate-300 dark:border-[#2C3E63] bg-white/95 dark:bg-[#11182B]/95 backdrop-blur-md shadow-[0_3px_0_rgba(203,213,225,0.65)] dark:shadow-[0_3px_0_rgba(30,43,71,0.85)] transition-colors">
       <div className="max-w-5xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
-        {/* Left: Pokédex Camera Lens + Brand Title + Daily Badge */}
         <div className="flex items-center gap-2 min-w-0">
           <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-slate-900 dark:bg-[#0B101D] border-2 border-slate-800 dark:border-[#334770] shadow-[0_2px_0_#1e293b] flex items-center justify-center group overflow-hidden shrink-0">
             <svg
@@ -92,9 +91,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Right Tactile Controls */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          {/* PolyDex Button */}
           <button
             type="button"
             onClick={onOpenPolyDex}
@@ -105,7 +102,6 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="font-mono font-bold">{polyDexCount}</span>
           </button>
 
-          {/* Streak Pill */}
           <button
             type="button"
             onClick={onOpenStats}
@@ -116,7 +112,6 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="font-mono font-bold">{dailyStreak}</span>
           </button>
 
-          {/* Past Archive */}
           <button
             type="button"
             onClick={onOpenArchive}
@@ -131,7 +126,6 @@ export const Header: React.FC<HeaderProps> = ({
             <History className="w-4 h-4" />
           </button>
 
-          {/* Statistics */}
           <button
             type="button"
             onClick={onOpenStats}
@@ -142,7 +136,6 @@ export const Header: React.FC<HeaderProps> = ({
             <BarChart3 className="w-4 h-4" />
           </button>
 
-          {/* How to Play */}
           <button
             type="button"
             onClick={onOpenHowToPlay}
@@ -153,7 +146,6 @@ export const Header: React.FC<HeaderProps> = ({
             <HelpCircle className="w-4 h-4" />
           </button>
 
-          {/* Quick Theme Toggle */}
           <button
             type="button"
             onClick={onToggleTheme}
@@ -170,7 +162,6 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {/* Settings */}
           <button
             type="button"
             onClick={onOpenSettings}

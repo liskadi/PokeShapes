@@ -19,9 +19,12 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="howto-modal-title"
+      onClick={onClose}
     >
-      <div className="game-card relative w-full max-w-md rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden flex flex-col">
-        {/* Header */}
+      <div
+        className="game-card relative w-full max-w-md rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="px-5 py-3.5 border-b-2 border-slate-200 dark:border-[#24304d] bg-diagonal-stripes flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
@@ -45,9 +48,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
           </button>
         </div>
 
-        {/* Concise 3-Step Body */}
         <div className="p-5 space-y-3.5 text-sm text-slate-600 dark:text-slate-300">
-          {/* Step 1 */}
           <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#0D1322] border border-slate-200 dark:border-[#1E2942]">
             <div className="w-8 h-8 rounded-xl bg-rose-500/15 text-rose-500 flex items-center justify-center shrink-0 mt-0.5">
               <Sparkles className="w-4 h-4" />
@@ -65,7 +66,6 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
             </div>
           </div>
 
-          {/* Step 2 */}
           <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#0D1322] border border-slate-200 dark:border-[#1E2942]">
             <div className="w-8 h-8 rounded-xl bg-sky-500/15 text-sky-500 flex items-center justify-center shrink-0 mt-0.5">
               <Layers className="w-4 h-4" />
@@ -80,7 +80,6 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
             </div>
           </div>
 
-          {/* Step 3 */}
           <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#0D1322] border border-slate-200 dark:border-[#1E2942]">
             <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
               <Target className="w-4 h-4" />

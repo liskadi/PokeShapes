@@ -42,7 +42,6 @@ export const StatsModal: React.FC<StatsModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Compute aggregate stats when "all" tab is active
   const displayStats: ModeStats =
     selectedTab === 'all'
       ? {
@@ -78,9 +77,6 @@ export const StatsModal: React.FC<StatsModalProps> = ({
       ? dailyState.modes[selectedTab].guesses.length
       : null;
 
-  /**
-   * Emoji Grid Sharing
-   */
   const handleShareResults = () => {
     const modeMeta: { mode: GameMode; icon: string; name: string }[] = [
       { mode: 'circles', icon: '🔵', name: 'Circles' },
@@ -98,9 +94,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
         continue;
       }
 
-      const wrongCount = mState.guesses.filter(
-        (g) => !g.comparison.isCorrect
-      ).length;
+      const wrongCount = mState.guesses.filter((g) => !g.isCorrect).length;
       const finalShapes = Math.min(
         shapeCfg.maxShapes,
         shapeCfg.initialShapes + wrongCount * shapeCfg.increment
@@ -114,7 +108,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
           : `${mState.guesses.length}/${MAX_GUESSES} (in progress)`;
 
       const emojiBar = mState.guesses
-        .map((g) => (g.comparison.isCorrect ? '🟩' : '🟥'))
+        .map((g) => (g.isCorrect ? '🟩' : '🟥'))
         .join('');
       sections.push(`${icon} ${name}: ${scoreStr}\n${emojiBar}`);
     }
@@ -138,9 +132,12 @@ export const StatsModal: React.FC<StatsModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="stats-modal-title"
+      onClick={onClose}
     >
-      <div className="game-card relative w-full max-w-lg rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[92vh] flex flex-col">
-        {/* Modal Header */}
+      <div
+        className="game-card relative w-full max-w-lg rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[92vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="px-6 py-4 border-b-2 border-slate-200 dark:border-[#24304d] bg-diagonal-stripes flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
@@ -169,7 +166,6 @@ export const StatsModal: React.FC<StatsModalProps> = ({
           </button>
         </div>
 
-        {/* Mode Filter Tabs */}
         <div className="px-6 pt-4">
           <div className="grid grid-cols-4 gap-1.5 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
             {(
@@ -196,9 +192,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
           </div>
         </div>
 
-        {/* Scrollable Content */}
         <div className="p-6 overflow-y-auto space-y-6">
-          {/* 4 KPI Metric Cards */}
           <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
             <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 p-2.5 sm:p-3 text-center">
               <div className="font-mono font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white">
@@ -239,7 +233,6 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             </div>
           </div>
 
-          {/* Triple Crown Achievement Banner */}
           <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-purple-500/10 border border-amber-500/25 px-4 py-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <Crown className="w-5 h-5 text-amber-500 shrink-0" />
@@ -257,7 +250,6 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             </span>
           </div>
 
-          {/* Guess Distribution Chart (1 to 10) */}
           <div>
             <h3 className="font-display font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
               Guess Distribution (1 – 10 Guesses)
@@ -300,7 +292,6 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             </div>
           </div>
 
-          {/* Footer: Next Daily Puzzle Countdown & Share Button */}
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2.5 text-center sm:text-left">
               <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-500 flex items-center justify-center">

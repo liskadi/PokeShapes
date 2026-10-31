@@ -1,11 +1,8 @@
-/**
- * Retro Pokedex Web Audio Synthesizer & Soft Volume-Normalized Official Pokemon Cry Player.
- */
 class SoundEngine {
   private ctx: AudioContext | null = null;
   private activeAudio: HTMLAudioElement | null = null;
   private activeSource: AudioBufferSourceNode | null = null;
-  private decodedCryCache: Map<string, AudioBuffer> = new Map();
+  private decodedCryCache = new Map<string, AudioBuffer>();
 
   private getContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
@@ -18,7 +15,7 @@ class SoundEngine {
         this.ctx = new AudioCtx();
       }
     }
-    if (this.ctx && this.ctx.state === 'suspended') {
+    if (this.ctx?.state === 'suspended') {
       this.ctx.resume().catch(() => {});
     }
     return this.ctx;
@@ -70,7 +67,7 @@ class SoundEngine {
     const ctx = this.getContext();
     if (!ctx) return;
 
-    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+    const notes = [523.25, 659.25, 783.99, 1046.5];
     notes.forEach((freq, idx) => {
       const start = ctx.currentTime + idx * 0.085;
       const dur = idx === notes.length - 1 ? 0.32 : 0.11;
@@ -95,7 +92,7 @@ class SoundEngine {
     const ctx = this.getContext();
     if (!ctx) return;
 
-    const notes = [392.0, 349.23, 311.13, 261.63]; // G4, F4, Eb4, C4
+    const notes = [392.0, 349.23, 311.13, 261.63];
     notes.forEach((freq, idx) => {
       const start = ctx.currentTime + idx * 0.12;
       const dur = 0.16;
@@ -115,10 +112,6 @@ class SoundEngine {
     });
   }
 
-  /**
-   * Computes a gentle, ear-safe gain multiplier for a Pokémon cry so it matches
-   * the soft UI sound level and never startles the player.
-   */
   private computeNormalizedGain(buffer: AudioBuffer): number {
     const channelData = buffer.getChannelData(0);
     let sumSquares = 0;
@@ -127,21 +120,16 @@ class SoundEngine {
 
     for (let i = 0; i < channelData.length; i++) {
       const abs = Math.abs(channelData[i]);
-      if (abs > peak) {
-        peak = abs;
-      }
+      if (abs > peak) peak = abs;
       if (abs > 0.008) {
         sumSquares += abs * abs;
         activeSamples++;
       }
     }
 
-    if (activeSamples === 0 || peak === 0) {
-      return 0.08;
-    }
+    if (activeSamples === 0 || peak === 0) return 0.08;
 
     const rms = Math.sqrt(sumSquares / activeSamples);
-    // Gentle target RMS and strict peak ceiling matching the soft UI sounds
     const TARGET_RMS = 0.032;
     const MAX_PEAK_CEILING = 0.14;
 
@@ -153,26 +141,18 @@ class SoundEngine {
     return Math.max(0.03, Math.min(0.32, gain));
   }
 
-  /**
-   * Plays the official Pokemon cry audio from PokeAPI (`cries.latest`) with:
-   * - Soft RMS normalization & strict peak ceiling
-   * - 45ms smooth fade-in ramp (eliminates sudden startle pop)
-   * - 3.6kHz low-pass filter (tames piercing chiptune high frequencies)
-   * - Post-gain limiter/compressor
-   */
   public async playPokemonCry(
     cryUrl?: string,
     forcePlay: boolean = true
   ): Promise<void> {
     if (!forcePlay || !cryUrl || typeof window === 'undefined') return;
 
-    // Stop any currently playing cry
     if (this.activeSource) {
       try {
         this.activeSource.stop();
         this.activeSource.disconnect();
       } catch {
-        // Ignore
+        // Ignore already stopped source
       }
       this.activeSource = null;
     }
@@ -200,18 +180,15 @@ class SoundEngine {
         const source = ctx.createBufferSource();
         source.buffer = audioBuffer;
 
-        // Low-pass filter rolls off harsh, ear-piercing chiptune frequencies above 3.6kHz
         const lowpass = ctx.createBiquadFilter();
         lowpass.type = 'lowpass';
         lowpass.frequency.setValueAtTime(3600, now);
         lowpass.Q.setValueAtTime(0.7, now);
 
-        // Gain node with a gentle 45ms fade-in ramp so it never pops or startles
         const gainNode = ctx.createGain();
         gainNode.gain.setValueAtTime(0.001, now);
         gainNode.gain.linearRampToValueAtTime(normalizedGain, now + 0.045);
 
-        // Brickwall dynamics compressor after gain node as a final safety ceiling
         const compressor = ctx.createDynamicsCompressor();
         compressor.threshold.setValueAtTime(-24, now);
         compressor.knee.setValueAtTime(10, now);
@@ -234,7 +211,7 @@ class SoundEngine {
         source.start(0);
         return;
       } catch {
-        // Fallback to standard HTMLAudioElement below if Web Audio decode fails
+        // Fall back to HTMLAudioElement if Web Audio decode fails
       }
     }
 

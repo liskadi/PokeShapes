@@ -10,7 +10,7 @@ build/
 out/
 storybook-static/
 
-# Internal & AI-generated documentation (kept local only)
+# Internal documentation (kept local only)
 docs/
 /docs/
 

@@ -1,99 +1,63 @@
 import { GameMode } from '../types/game';
 
-/**
- * PokéShapes Epoch Date (Puzzle #1 = 2026-10-26 so 2026-10-30 starts on Day 5 with Days 1-4 in Archive)
- * Stored as UTC midnight components of local calendar date to avoid DST drift.
- */
 export const EPOCH_YEAR = 2026;
-export const EPOCH_MONTH = 10; // October (1-indexed)
+export const EPOCH_MONTH = 10;
 export const EPOCH_DAY = 26;
 export const TOTAL_MAINLINE_POKEMON = 1025;
 
-/**
- * Returns the local calendar date string in "YYYY-MM-DD" format.
- */
+const DAY_MS = 86_400_000;
+
+function formatDateParts(year: number, month: number, day: number): string {
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 export function getLocalDateKey(date: Date = new Date()): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return formatDateParts(date.getFullYear(), date.getMonth() + 1, date.getDate());
 }
 
-/**
- * Returns the "YYYY-MM-DD" dateKey offset by `offsetDays` from `baseDateKey`.
- * e.g., offsetDateKey("2026-10-22", -1) => "2026-10-21" (Yesterday).
- */
+export function parseDateKeyToUtcMs(dateKey: string): number {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  return Date.UTC(y, m - 1, d);
+}
+
 export function getOffsetDateKey(baseDateKey: string, offsetDays: number): string {
-  const utcMs = parseDateKeyToUtcMs(baseDateKey) + offsetDays * 86_400_000;
-  const d = new Date(utcMs);
-  const year = d.getUTCFullYear();
-  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(d.getUTCDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  const d = new Date(parseDateKeyToUtcMs(baseDateKey) + offsetDays * DAY_MS);
+  return formatDateParts(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate());
 }
 
-/**
- * Generates a list of playable Archive dateKeys from today back to Epoch (up to `maxDays`).
- */
 export function getArchiveDateKeys(
   todayDateKey: string,
   maxDays: number = 31
 ): { dateKey: string; puzzleNumber: number; isToday: boolean; isYesterday: boolean }[] {
   const todayIdx = getDayIndexFromEpoch(todayDateKey);
   const count = Math.min(maxDays, todayIdx + 1);
-  const list = [];
-  for (let i = 0; i < count; i++) {
+  return Array.from({ length: count }, (_, i) => {
     const dk = getOffsetDateKey(todayDateKey, -i);
-    list.push({
+    return {
       dateKey: dk,
       puzzleNumber: getPuzzleNumber(dk),
       isToday: i === 0,
       isYesterday: i === 1,
-    });
-  }
-  return list;
+    };
+  });
 }
 
-/**
- * Parses a "YYYY-MM-DD" date key into a UTC timestamp at 00:00:00.
- */
-export function parseDateKeyToUtcMs(dateKey: string): number {
-  const [y, m, d] = dateKey.split('-').map(Number);
-  if (!y || !m || !d) {
-    const now = new Date();
-    return Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  }
-  return Date.UTC(y, m - 1, d);
-}
-
-/**
- * Computes the number of calendar days between two "YYYY-MM-DD" keys.
- */
 export function daysBetweenDateKeys(startKey: string, endKey: string): number {
-  const startMs = parseDateKeyToUtcMs(startKey);
-  const endMs = parseDateKeyToUtcMs(endKey);
-  return Math.round((endMs - startMs) / 86_400_000);
+  return Math.round((parseDateKeyToUtcMs(endKey) - parseDateKeyToUtcMs(startKey)) / DAY_MS);
 }
 
-/**
- * Returns the 0-based day index since the PokéShapes Epoch.
- */
 export function getDayIndexFromEpoch(dateKey: string): number {
   const epochUtc = Date.UTC(EPOCH_YEAR, EPOCH_MONTH - 1, EPOCH_DAY);
-  const currentUtc = parseDateKeyToUtcMs(dateKey);
-  const diffDays = Math.round((currentUtc - epochUtc) / 86_400_000);
+  const diffDays = Math.round((parseDateKeyToUtcMs(dateKey) - epochUtc) / DAY_MS);
   return Math.max(0, diffDays);
 }
 
-/**
- * Returns the 1-based Daily Puzzle Number (#1, #2, #3, ...).
- */
 export function getPuzzleNumber(dateKey: string): number {
   return getDayIndexFromEpoch(dateKey) + 1;
 }
 
 /**
- * Deterministic 32-bit string hash (FNV-1a + Murmur3 finalizer avalanche).
+ * Deterministic 32-bit FNV-1a + Murmur3 avalanche hash.
  */
 export function hashString(str: string): number {
   let h = 2166136261 >>> 0;
@@ -109,9 +73,6 @@ export function hashString(str: string): number {
   return h >>> 0;
 }
 
-/**
- * Mulberry32 deterministic 32-bit PRNG returning floats in [0, 1).
- */
 export function mulberry32(seed: number): () => number {
   let state = seed >>> 0;
   return function () {
@@ -122,11 +83,6 @@ export function mulberry32(seed: number): () => number {
   };
 }
 
-/**
- * Builds a deterministically shuffled deck of Pokemon IDs [1..totalPokemon]
- * using Fisher-Yates shuffle seeded by `seedStr`.
- * Guarantees zero repeat Pokemon within a full 1,025-day cycle.
- */
 export function buildShuffledDeck(
   seedStr: string,
   totalPokemon: number = TOTAL_MAINLINE_POKEMON
@@ -145,9 +101,8 @@ export function buildShuffledDeck(
 }
 
 /**
- * Resolves the 3 daily target Pokemon IDs for a given "YYYY-MM-DD" dateKey.
- * Uses independent cycle permutations per mode + a cross-mode collision guard
- * so Circles, Triangles, and Lines are guaranteed to be 3 distinct Pokemon every day.
+ * Resolves the 3 daily target Pokémon IDs for a dateKey using independent per-mode
+ * Fisher-Yates decks and a collision guard so all 3 modes feature distinct Pokémon.
  */
 export function getDailyTargets(
   dateKey: string,
@@ -182,10 +137,6 @@ export function getDailyTargets(
   };
 }
 
-/**
- * Generates a deterministic 32-bit seed for the Geometrize Web Worker
- * so every player on the same day gets the exact same 105 geometric shapes.
- */
 export function getGeometrizeSeed(
   dateKey: string,
   mode: GameMode,

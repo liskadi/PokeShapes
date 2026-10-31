@@ -29,7 +29,6 @@ interface UseGeometrizeResult {
   canvasSize: number;
   croppedArtworkDataUrl: string | null;
   isInitialLoading: boolean;
-  isBackgroundComputing: boolean;
   error: string | null;
   retry: () => void;
 }
@@ -60,7 +59,6 @@ export function useGeometrize({
   const bgWorkerRef = useRef<Worker | null>(null);
   const [activeCompleteTick, setActiveCompleteTick] = useState<number>(0);
 
-  // Primary active mode pipeline
   useEffect(() => {
     if (!officialArtworkUrl || !pokemonId) {
       return;
@@ -79,14 +77,12 @@ export function useGeometrize({
 
     async function runPipeline() {
       try {
-        // 1. Always compute the auto-cropped artwork data URL & RGBA bytes
         const bitmapDataPromise = loadArtworkBitmapBytes(
           officialArtworkUrl!,
           TARGET_CANVAS_SIZE,
           RUNNER_BG_COLOR
         );
 
-        // 2. Check IndexedDB cache in parallel
         const cached = await getCachedShapes(cacheKey);
         if (cancelled) return;
 
@@ -94,7 +90,6 @@ export function useGeometrize({
           setShapes(cached);
           setIsInitialLoading(false);
           setIsBackgroundComputing(false);
-          // Populate cropped overlay for post-game slider
           bitmapDataPromise
             .then((res) => {
               if (!cancelled) setCroppedArtworkDataUrl(res.croppedArtworkDataUrl);
@@ -197,12 +192,6 @@ export function useGeometrize({
     };
   }, [dateKey, mode, pokemonId, officialArtworkUrl, seed, retryCount]);
 
-  /**
-   * 3.2 Idle Background Pre-Generation for All 3 Daily Modes:
-   * Once the active tab finishes generating its shapes (`activeCompleteTick` increments),
-   * sequentially pre-generate and cache any un-cached sibling daily modes in the background
-   * so switching between Circles, Triangles, and Lines is 0ms instantaneous!
-   */
   useEffect(() => {
     if (isInitialLoading || isBackgroundComputing || backgroundTasks.length === 0) {
       return;
@@ -218,7 +207,7 @@ export function useGeometrize({
         const existing = await getCachedShapes(bgCacheKey);
         if (cancelled) return;
         if (existing && existing.length >= taskCfg.maxShapes) {
-          continue; // Already cached!
+          continue;
         }
 
         try {
@@ -237,6 +226,14 @@ export function useGeometrize({
             bgWorkerRef.current = bgWorker;
             const jobId = `bg:${bgCacheKey}:${Date.now()}`;
 
+            const cleanup = () => {
+              bgWorker.terminate();
+              if (bgWorkerRef.current === bgWorker) {
+                bgWorkerRef.current = null;
+              }
+              resolve();
+            };
+
             bgWorker.onmessage = (
               event: MessageEvent<GeometrizeWorkerResponse>
             ) => {
@@ -247,27 +244,13 @@ export function useGeometrize({
                   event.data.shapes,
                   `${CACHE_VERSION}:${task.dateKey}`
                 );
-                bgWorker.terminate();
-                if (bgWorkerRef.current === bgWorker) {
-                  bgWorkerRef.current = null;
-                }
-                resolve();
+                cleanup();
               } else if (event.data.type === 'ERROR') {
-                bgWorker.terminate();
-                if (bgWorkerRef.current === bgWorker) {
-                  bgWorkerRef.current = null;
-                }
-                resolve();
+                cleanup();
               }
             };
 
-            bgWorker.onerror = () => {
-              bgWorker.terminate();
-              if (bgWorkerRef.current === bgWorker) {
-                bgWorkerRef.current = null;
-              }
-              resolve();
-            };
+            bgWorker.onerror = cleanup;
 
             const bufferCopy = rgbaBytes.buffer.slice(0);
             const req: GeometrizeWorkerRequest = {
@@ -305,7 +288,6 @@ export function useGeometrize({
     canvasSize: TARGET_CANVAS_SIZE,
     croppedArtworkDataUrl,
     isInitialLoading,
-    isBackgroundComputing,
     error,
     retry: () => setRetryCount((c) => c + 1),
   };

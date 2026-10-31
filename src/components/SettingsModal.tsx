@@ -73,9 +73,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-modal-title"
+      onClick={onClose}
     >
-      <div className="game-card relative w-full max-w-lg rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[92vh] flex flex-col">
-        {/* Header */}
+      <div
+        className="game-card relative w-full max-w-lg rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[92vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="px-6 py-4 border-b-2 border-slate-200 dark:border-[#24304d] bg-diagonal-stripes flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
@@ -104,9 +107,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </button>
         </div>
 
-        {/* Settings Body */}
         <div className="p-6 overflow-y-auto space-y-6">
-          {/* 1. Light / Dark Theme Mode */}
           <div>
             <label className="text-xs font-display font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2.5">
               Appearance Theme
@@ -146,7 +147,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* 2. Color Blind Mode */}
           <div>
             <label className="text-xs font-display font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mb-2.5">
               <Palette className="w-3.5 h-3.5 text-rose-500" />
@@ -192,9 +192,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* 3. Toggle Switches */}
           <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-            {/* High-Contrast Scanner Backdrop */}
             <div className="flex items-center justify-between gap-4 py-1.5">
               <div className="flex items-start gap-3">
                 <Contrast className="w-5 h-5 text-sky-500 mt-0.5 shrink-0" />
@@ -232,7 +230,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             </div>
 
-            {/* Shape Pop-In Animations */}
             <div className="flex items-center justify-between gap-4 py-1.5">
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
@@ -266,7 +263,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             </div>
 
-            {/* Sound Effects */}
             <div className="flex items-center justify-between gap-4 py-1.5">
               <div className="flex items-start gap-3">
                 {settings.soundEnabled ? (
@@ -305,7 +301,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* 4. Reset All Game Data */}
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0D1322] border border-slate-200 dark:border-[#243454]">
               <div>

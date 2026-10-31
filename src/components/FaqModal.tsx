@@ -78,7 +78,6 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
         className="game-card relative w-full max-w-2xl rounded-3xl bg-white dark:bg-[#141C2F] overflow-hidden max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-6 py-4 border-b-2 border-slate-200 dark:border-[#24304d] bg-diagonal-stripes flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
@@ -107,7 +106,6 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Smoothly Animated Collapsible & Expandable FAQ Accordion List */}
         <div className="p-6 overflow-y-auto space-y-2.5 text-sm">
           {FAQ_ITEMS.map((item, idx) => {
             const isExpanded = openIndices.has(idx);
@@ -133,7 +131,6 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
                   />
                 </button>
 
-                {/* Animated Accordion Body using CSS Grid 0fr -> 1fr transition */}
                 <div
                   className={`grid transition-all duration-300 ease-out ${
                     isExpanded
@@ -152,7 +149,6 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
           })}
         </div>
 
-        {/* Footer Button */}
         <div className="px-6 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 flex justify-end">
           <button
             type="button"

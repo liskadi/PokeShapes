@@ -27,22 +27,33 @@ const ONBOARDED_KEY = 'pokeshapes:onboarded-v2';
 const IDB_NAME = 'pokeshapes-shapes-db-v2';
 const IDB_STORE = 'shapes';
 
-// Automatically purge legacy v1 storage keys on startup so all users start fresh on the v2 epoch
+function readJson<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeJson(key: string, value: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Storage quota full or unavailable
+  }
+}
+
+// Purge legacy v1 storage keys on startup so all users start fresh on the v2 epoch
 (function purgeLegacyV1Storage() {
   try {
-    if (typeof localStorage !== 'undefined') {
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('pokeshapes:') && key.includes('-v1')) {
-          keysToRemove.push(key);
-        }
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('pokeshapes:') && key.includes('-v1')) {
+        localStorage.removeItem(key);
       }
-      keysToRemove.forEach((k) => localStorage.removeItem(k));
     }
-    if (typeof indexedDB !== 'undefined') {
-      indexedDB.deleteDatabase('pokeshapes-shapes-db-v1');
-    }
+    indexedDB?.deleteDatabase('pokeshapes-shapes-db-v1');
   } catch {
     // Ignore storage cleanup error
   }
@@ -122,21 +133,12 @@ export function createDefaultStats(): AllStats {
 }
 
 export function loadSettings(): UserSettings {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return DEFAULT_SETTINGS;
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
+  const saved = readJson<Partial<UserSettings>>(SETTINGS_KEY);
+  return saved ? { ...DEFAULT_SETTINGS, ...saved } : DEFAULT_SETTINGS;
 }
 
 export function saveSettings(settings: UserSettings): void {
-  try {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  } catch {
-    // Ignore storage error
-  }
+  writeJson(SETTINGS_KEY, settings);
 }
 
 export function hasSeenOnboarding(): boolean {
@@ -159,63 +161,36 @@ export function createInitialDailyState(dateKey: string): DailyGameState {
   const targets = getDailyTargets(dateKey);
   const puzzleNumber = getPuzzleNumber(dateKey);
 
-  const modes: Record<GameMode, ModeGameState> = {
-    circles: {
-      mode: 'circles',
-      dateKey,
-      targetPokemonId: targets.circles,
-      geometrizeSeed: getGeometrizeSeed(dateKey, 'circles', targets.circles),
-      guesses: [],
-      status: 'playing',
-    },
-    triangles: {
-      mode: 'triangles',
-      dateKey,
-      targetPokemonId: targets.triangles,
-      geometrizeSeed: getGeometrizeSeed(dateKey, 'triangles', targets.triangles),
-      guesses: [],
-      status: 'playing',
-    },
-    lines: {
-      mode: 'lines',
-      dateKey,
-      targetPokemonId: targets.lines,
-      geometrizeSeed: getGeometrizeSeed(dateKey, 'lines', targets.lines),
-      guesses: [],
-      status: 'playing',
-    },
-  };
+  const buildModeState = (mode: GameMode): ModeGameState => ({
+    mode,
+    dateKey,
+    targetPokemonId: targets[mode],
+    geometrizeSeed: getGeometrizeSeed(dateKey, mode, targets[mode]),
+    guesses: [],
+    status: 'playing',
+  });
 
   return {
     dateKey,
     puzzleNumber,
-    modes,
+    modes: {
+      circles: buildModeState('circles'),
+      triangles: buildModeState('triangles'),
+      lines: buildModeState('lines'),
+    },
   };
 }
 
 export function loadDailyState(dateKey: string, isToday: boolean = true): DailyGameState {
-  const storageKey = isToday
-    ? DAILY_STATE_KEY
-    : `${ARCHIVE_STATE_PREFIX}${dateKey}`;
+  const primaryKey = isToday ? DAILY_STATE_KEY : `${ARCHIVE_STATE_PREFIX}${dateKey}`;
+  const primary = readJson<DailyGameState>(primaryKey);
+  if (primary?.dateKey === dateKey && primary.modes) {
+    return primary;
+  }
 
-  try {
-    const raw = localStorage.getItem(storageKey);
-    if (raw) {
-      const parsed = JSON.parse(raw) as DailyGameState;
-      if (parsed && parsed.dateKey === dateKey && parsed.modes) {
-        return parsed;
-      }
-    }
-    // Also check archive prefix in case today rolled over or vice versa
-    const fallbackRaw = localStorage.getItem(`${ARCHIVE_STATE_PREFIX}${dateKey}`);
-    if (fallbackRaw) {
-      const parsed = JSON.parse(fallbackRaw) as DailyGameState;
-      if (parsed && parsed.dateKey === dateKey && parsed.modes) {
-        return parsed;
-      }
-    }
-  } catch {
-    // Ignore parse error
+  const fallback = readJson<DailyGameState>(`${ARCHIVE_STATE_PREFIX}${dateKey}`);
+  if (fallback?.dateKey === dateKey && fallback.modes) {
+    return fallback;
   }
 
   const fresh = createInitialDailyState(dateKey);
@@ -224,48 +199,32 @@ export function loadDailyState(dateKey: string, isToday: boolean = true): DailyG
 }
 
 export function saveDailyState(state: DailyGameState, isToday: boolean = true): void {
-  try {
-    if (isToday) {
-      localStorage.setItem(DAILY_STATE_KEY, JSON.stringify(state));
-    }
-    localStorage.setItem(
-      `${ARCHIVE_STATE_PREFIX}${state.dateKey}`,
-      JSON.stringify(state)
-    );
-  } catch {
-    // Ignore storage error
+  if (isToday) {
+    writeJson(DAILY_STATE_KEY, state);
   }
+  writeJson(`${ARCHIVE_STATE_PREFIX}${state.dateKey}`, state);
 }
 
 export function loadStats(todayDateKey: string): AllStats {
   let stats = createDefaultStats();
-  try {
-    const raw = localStorage.getItem(STATS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as AllStats;
-      if (parsed && parsed.modes) {
-        stats = {
-          ...stats,
-          ...parsed,
-          modes: {
-            circles: { ...createEmptyModeStats(), ...parsed.modes.circles },
-            triangles: { ...createEmptyModeStats(), ...parsed.modes.triangles },
-            lines: { ...createEmptyModeStats(), ...parsed.modes.lines },
-          },
-        };
-      }
-    }
-  } catch {
-    // Ignore parse error
+  const parsed = readJson<AllStats>(STATS_KEY);
+  if (parsed?.modes) {
+    stats = {
+      ...stats,
+      ...parsed,
+      modes: {
+        circles: { ...createEmptyModeStats(), ...parsed.modes.circles },
+        triangles: { ...createEmptyModeStats(), ...parsed.modes.triangles },
+        lines: { ...createEmptyModeStats(), ...parsed.modes.lines },
+      },
+    };
   }
 
-  // Reconcile streaks if the user missed more than 1 calendar day
   let mutated = false;
   (['circles', 'triangles', 'lines'] as GameMode[]).forEach((mode) => {
     const mStats = stats.modes[mode];
     if (mStats.lastWonDateKey && mStats.currentStreak > 0) {
-      const gap = daysBetweenDateKeys(mStats.lastWonDateKey, todayDateKey);
-      if (gap > 1) {
+      if (daysBetweenDateKeys(mStats.lastWonDateKey, todayDateKey) > 1) {
         mStats.currentStreak = 0;
         mutated = true;
       }
@@ -273,8 +232,7 @@ export function loadStats(todayDateKey: string): AllStats {
   });
 
   if (stats.lastDailyWinDateKey && stats.dailyOverallStreak > 0) {
-    const gap = daysBetweenDateKeys(stats.lastDailyWinDateKey, todayDateKey);
-    if (gap > 1) {
+    if (daysBetweenDateKeys(stats.lastDailyWinDateKey, todayDateKey) > 1) {
       stats.dailyOverallStreak = 0;
       mutated = true;
     }
@@ -288,86 +246,62 @@ export function loadStats(todayDateKey: string): AllStats {
 }
 
 export function saveStats(stats: AllStats): void {
-  try {
-    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
-  } catch {
-    // Ignore storage error
-  }
+  writeJson(STATS_KEY, stats);
 }
 
-/**
- * Records a completed daily game (won or lost) into lifetime statistics.
- * Playing past archive puzzles (`isTodayPuzzle === false`) does NOT affect any statistics or streaks.
- */
 export function recordDailyGameResult(
   currentStats: AllStats,
   mode: GameMode,
   dateKey: string,
   won: boolean,
   guessCount: number,
-  allModesState: Record<GameMode, ModeGameState>,
-  isTodayPuzzle: boolean = true
+  allModesState: Record<GameMode, ModeGameState>
 ): AllStats {
-  // Past archive games never modify stats or streaks
-  if (!isTodayPuzzle) {
+  const mCurrent = currentStats.modes[mode];
+  if (mCurrent.lastPlayedDateKey === dateKey) {
     return currentStats;
   }
 
-  const next: AllStats = JSON.parse(JSON.stringify(currentStats));
-  const mStats = next.modes[mode];
+  const mStats: ModeStats = {
+    ...mCurrent,
+    played: mCurrent.played + 1,
+    lastPlayedDateKey: dateKey,
+    guessDistribution: [...mCurrent.guessDistribution],
+  };
 
-  // Prevent double-counting the same mode on the same dateKey
-  if (mStats.lastPlayedDateKey === dateKey) {
-    return next;
-  }
-
-  mStats.played += 1;
-  mStats.lastPlayedDateKey = dateKey;
+  const next: AllStats = {
+    ...currentStats,
+    modes: {
+      ...currentStats.modes,
+      [mode]: mStats,
+    },
+    completedTripleCrownDates: [...currentStats.completedTripleCrownDates],
+  };
 
   if (won) {
     mStats.won += 1;
     const distIdx = Math.max(0, Math.min(MAX_GUESSES - 1, guessCount - 1));
-    mStats.guessDistribution[distIdx] =
-      (mStats.guessDistribution[distIdx] || 0) + 1;
+    mStats.guessDistribution[distIdx] = (mStats.guessDistribution[distIdx] || 0) + 1;
 
-    if (mStats.lastWonDateKey) {
-      const gap = daysBetweenDateKeys(mStats.lastWonDateKey, dateKey);
-      if (gap === 1) {
-        mStats.currentStreak += 1;
-      } else if (gap > 1) {
-        mStats.currentStreak = 1;
-      }
-    } else {
-      mStats.currentStreak = 1;
-    }
-
+    const modeGap = mStats.lastWonDateKey
+      ? daysBetweenDateKeys(mStats.lastWonDateKey, dateKey)
+      : 0;
+    mStats.currentStreak = modeGap === 1 ? mStats.currentStreak + 1 : 1;
     mStats.lastWonDateKey = dateKey;
-    if (mStats.currentStreak > mStats.maxStreak) {
-      mStats.maxStreak = mStats.currentStreak;
-    }
+    mStats.maxStreak = Math.max(mStats.maxStreak, mStats.currentStreak);
 
-    // Update overall daily streak (at least 1 mode won today)
     if (next.lastDailyWinDateKey !== dateKey) {
-      if (next.lastDailyWinDateKey) {
-        const dailyGap = daysBetweenDateKeys(
-          next.lastDailyWinDateKey,
-          dateKey
-        );
-        if (dailyGap === 1) {
-          next.dailyOverallStreak += 1;
-        } else {
-          next.dailyOverallStreak = 1;
-        }
-      } else {
-        next.dailyOverallStreak = 1;
-      }
+      const dailyGap = next.lastDailyWinDateKey
+        ? daysBetweenDateKeys(next.lastDailyWinDateKey, dateKey)
+        : 0;
+      next.dailyOverallStreak = dailyGap === 1 ? next.dailyOverallStreak + 1 : 1;
       next.lastDailyWinDateKey = dateKey;
-      if (next.dailyOverallStreak > next.dailyMaxOverallStreak) {
-        next.dailyMaxOverallStreak = next.dailyOverallStreak;
-      }
+      next.dailyMaxOverallStreak = Math.max(
+        next.dailyMaxOverallStreak,
+        next.dailyOverallStreak
+      );
     }
 
-    // Check if all 3 modes are now won for today's dateKey (Triple Crown!)
     const allThreeWon = (['circles', 'triangles', 'lines'] as GameMode[]).every(
       (m) => (m === mode ? won : allModesState[m]?.status === 'won')
     );
@@ -376,7 +310,6 @@ export function recordDailyGameResult(
       next.completedTripleCrownDates.push(dateKey);
     }
   } else {
-    // Loss resets current streak for this mode
     mStats.currentStreak = 0;
   }
 
@@ -384,25 +317,12 @@ export function recordDailyGameResult(
   return next;
 }
 
-/**
- * 2.4 PolyDex Collection & Trainer Ranks Persistence
- */
 export function loadPolyDex(): PolyDexMap {
-  try {
-    const raw = localStorage.getItem(POLYDEX_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw) as PolyDexMap;
-  } catch {
-    return {};
-  }
+  return readJson<PolyDexMap>(POLYDEX_KEY) || {};
 }
 
 export function savePolyDex(dex: PolyDexMap): void {
-  try {
-    localStorage.setItem(POLYDEX_KEY, JSON.stringify(dex));
-  } catch {
-    // Ignore storage error
-  }
+  writeJson(POLYDEX_KEY, dex);
 }
 
 export function recordPolyDexCatch(
@@ -411,31 +331,27 @@ export function recordPolyDexCatch(
   mode: GameMode,
   dateKey: string
 ): PolyDexMap {
-  const next: PolyDexMap = { ...currentDex };
-  const existing = next[pokemonId];
-
-  if (existing) {
-    next[pokemonId] = {
-      ...existing,
-      modesCaught: {
-        ...existing.modesCaught,
-        [mode]: true,
-      },
-      caughtDates: {
-        ...(existing.caughtDates || {}),
-        [mode]: existing.caughtDates?.[mode] || dateKey,
-      },
-      totalTimesCaught: (existing.totalTimesCaught || 1) + 1,
-    };
-  } else {
-    next[pokemonId] = {
-      pokemonId,
-      modesCaught: { [mode]: true },
-      caughtDates: { [mode]: dateKey },
-      firstCaughtDate: dateKey,
-      totalTimesCaught: 1,
-    };
-  }
+  const existing = currentDex[pokemonId];
+  const next: PolyDexMap = {
+    ...currentDex,
+    [pokemonId]: existing
+      ? {
+          ...existing,
+          modesCaught: { ...existing.modesCaught, [mode]: true },
+          caughtDates: {
+            ...existing.caughtDates,
+            [mode]: existing.caughtDates?.[mode] || dateKey,
+          },
+          totalTimesCaught: (existing.totalTimesCaught || 1) + 1,
+        }
+      : {
+          pokemonId,
+          modesCaught: { [mode]: true },
+          caughtDates: { [mode]: dateKey },
+          firstCaughtDate: dateKey,
+          totalTimesCaught: 1,
+        },
+  };
 
   savePolyDex(next);
   return next;
@@ -461,9 +377,6 @@ export function getTrainerRank(uniqueCaughtCount: number): TrainerRankInfo {
   };
 }
 
-/**
- * IndexedDB helper to cache the SVG shape strings per puzzle so reloading is instant.
- */
 function openShapesDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (typeof indexedDB === 'undefined') {
@@ -487,15 +400,10 @@ export async function getCachedShapes(cacheKey: string): Promise<string[] | null
     const db = await openShapesDb();
     return await new Promise((resolve) => {
       const tx = db.transaction(IDB_STORE, 'readonly');
-      const store = tx.objectStore(IDB_STORE);
-      const req = store.get(cacheKey);
+      const req = tx.objectStore(IDB_STORE).get(cacheKey);
       req.onsuccess = () => {
         const res = req.result;
-        if (Array.isArray(res) && res.length > 0) {
-          resolve(res);
-        } else {
-          resolve(null);
-        }
+        resolve(Array.isArray(res) && res.length > 0 ? res : null);
       };
       req.onerror = () => resolve(null);
     });
@@ -514,7 +422,6 @@ export async function setCachedShapes(
     const tx = db.transaction(IDB_STORE, 'readwrite');
     const store = tx.objectStore(IDB_STORE);
 
-    // Keep cache bounded to recent entries (max 45 puzzles)
     const keysReq = store.getAllKeys();
     keysReq.onsuccess = () => {
       const keys = keysReq.result as string[];
@@ -534,29 +441,20 @@ export async function setCachedShapes(
   }
 }
 
-/**
- * Resets all user gameplay data (Daily state, Archive states, Statistics, Streaks, PolyDex, and cached shapes).
- */
 export async function clearAllUserData(): Promise<void> {
   try {
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
       const key = localStorage.key(i);
       if (
         key &&
         (key === DAILY_STATE_KEY ||
           key === STATS_KEY ||
           key === POLYDEX_KEY ||
-          key.startsWith(ARCHIVE_STATE_PREFIX) ||
-          key.startsWith('pokeshapes:daily-state') ||
-          key.startsWith('pokeshapes:archive-state') ||
-          key.startsWith('pokeshapes:stats') ||
-          key.startsWith('pokeshapes:polydex'))
+          key.startsWith(ARCHIVE_STATE_PREFIX))
       ) {
-        keysToRemove.push(key);
+        localStorage.removeItem(key);
       }
     }
-    keysToRemove.forEach((k) => localStorage.removeItem(k));
   } catch {
     // Ignore localStorage error
   }
@@ -565,8 +463,7 @@ export async function clearAllUserData(): Promise<void> {
     const db = await openShapesDb();
     await new Promise<void>((resolve) => {
       const tx = db.transaction(IDB_STORE, 'readwrite');
-      const store = tx.objectStore(IDB_STORE);
-      const req = store.clear();
+      const req = tx.objectStore(IDB_STORE).clear();
       req.onsuccess = () => resolve();
       req.onerror = () => resolve();
     });

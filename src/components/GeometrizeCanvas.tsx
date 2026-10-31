@@ -25,14 +25,11 @@ import { soundEngine } from '../utils/sound';
 interface GeometrizeCanvasProps {
   mode: GameMode;
   status: GameStatus;
-  gaveUp?: boolean;
   shapes: string[];
   canvasSize: number;
   croppedArtworkDataUrl: string | null;
   unlockedShapeCount: number;
-  guessesUsed: number;
   isInitialLoading: boolean;
-  isBackgroundComputing: boolean;
   error: string | null;
   onRetry: () => void;
   targetPokemon: PokemonDetails | null;
@@ -81,27 +78,19 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
   onOpenStats,
   onNextMode,
 }) => {
-  const shapeCfg = getModeShapeConfig(mode);
-  const { initialShapes, increment, maxShapes } = shapeCfg;
+  const { initialShapes, increment, maxShapes } = getModeShapeConfig(mode);
 
-  // Post-game original artwork toggle (false = geometrized shapes, true = original sprite)
   const [showOriginalSprite, setShowOriginalSprite] = useState<boolean>(false);
-
-  // Timelapse Replay state (1 -> maxShapes)
   const [isReplayingTimelapse, setIsReplayingTimelapse] =
     useState<boolean>(false);
   const [timelapseStep, setTimelapseStep] = useState<number | null>(null);
   const timelapseTimerRef = useRef<number | null>(null);
-
-  // Two-click Give Up confirmation state
   const [confirmingGiveUp, setConfirmingGiveUp] = useState<boolean>(false);
 
-  // Reset confirmation when unlocked shapes or target change
   useEffect(() => {
     setConfirmingGiveUp(false);
   }, [unlockedShapeCount, mode, targetPokemon?.id]);
 
-  // Reset overlay & timelapse when switching modes or starting a new puzzle
   useEffect(() => {
     setIsReplayingTimelapse(false);
     setTimelapseStep(null);
@@ -113,7 +102,6 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
     }
   }, [status, mode, targetPokemon?.id]);
 
-  // Start / Stop 1 -> maxShapes Timelapse Replay
   const handleToggleTimelapse = () => {
     if (isReplayingTimelapse) {
       if (timelapseTimerRef.current) {
@@ -131,7 +119,6 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
 
     const maxAvailable = Math.min(maxShapes, shapes.length || maxShapes);
     let current = 1;
-    // Advance 1 shape at a time at a relaxed pace (~4.8 - 6.0 seconds total)
     const intervalMs = Math.max(
       22,
       Math.min(45, Math.round(5200 / maxAvailable))
@@ -157,7 +144,6 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
       ? Math.min(timelapseStep, shapes.length || initialShapes)
       : Math.min(unlockedShapeCount, shapes.length || initialShapes);
 
-  // Build standalone SVG string for high-res PNG export
   const buildStandaloneSvgString = (count: number = effectiveShapeCount) => {
     const bgHex = highContrastCanvas ? '#000000' : '#0F172A';
     const body = shapes.slice(0, count).join('\n  ');
@@ -170,7 +156,6 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
     ].join('\n');
   };
 
-  // Save Image (1024x1024 high-res PNG)
   const handleDownloadPng = () => {
     const svgContent = buildStandaloneSvgString(effectiveShapeCount);
     const blob = new Blob([svgContent], {
@@ -200,7 +185,6 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
     img.src = url;
   };
 
-  // Split shapes into older shapes and newly added batch for smooth pop animation
   const previousBatchCutoff = Math.max(0, effectiveShapeCount - increment);
   const olderShapesMarkup = shapes.slice(0, previousBatchCutoff).join('\n');
   const newestShapesMarkup = shapes
@@ -209,9 +193,7 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
 
   return (
     <div className="game-card bg-white dark:bg-[#141C2F] rounded-3xl p-3 sm:p-5">
-      {/* Clean Pokédex Screen Frame ("WHO'S THAT POKÉMON?" Window) */}
       <div className="mx-auto w-full max-w-[330px] sm:max-w-[404px] rounded-3xl bg-slate-200/90 dark:bg-[#0B101D] p-2.5 sm:p-3 border-2 border-slate-300 dark:border-[#2C3E63] shadow-inner">
-        {/* Top Bezel Header */}
         <div className="flex items-center justify-between px-2 pb-2 text-[10px] font-display font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_5px_rgba(244,63,94,0.8)]" />
@@ -224,7 +206,6 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
           </div>
         </div>
 
-        {/* Main Geometric Viewport */}
         <div className="relative mx-auto w-full aspect-square rounded-2xl overflow-hidden border-2 border-slate-700 dark:border-[#243454] shadow-lg group">
           <div
             className={`w-full h-full flex items-center justify-center transition-colors ${
@@ -259,7 +240,6 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
               </div>
             ) : (
               <>
-                {/* Geometrized SVG Output */}
                 <svg
                   viewBox={`0 0 ${canvasSize} ${canvasSize}`}
                   className={`w-full h-full select-none transition-opacity duration-200 ${
@@ -291,7 +271,6 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
                   />
                 </svg>
 
-                {/* Post-Game Official Artwork Overlay */}
                 {status !== 'playing' && targetPokemon && (
                   <img
                     src={
@@ -308,14 +287,12 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
             )}
           </div>
 
-          {/* Corner HUD Brackets */}
           <div className="pointer-events-none absolute top-2.5 left-2.5 w-4 h-4 border-t-2 border-l-2 border-sky-400/60 rounded-tl" />
           <div className="pointer-events-none absolute top-2.5 right-2.5 w-4 h-4 border-t-2 border-r-2 border-sky-400/60 rounded-tr" />
           <div className="pointer-events-none absolute bottom-2.5 left-2.5 w-4 h-4 border-b-2 border-l-2 border-sky-400/60 rounded-bl" />
           <div className="pointer-events-none absolute bottom-2.5 right-2.5 w-4 h-4 border-b-2 border-r-2 border-sky-400/60 rounded-br" />
         </div>
 
-        {/* Bottom Bezel Bar: Single Shape Count Readout */}
         <div className="flex items-center justify-between px-2.5 pt-2 pb-0.5">
           <div className="flex items-center gap-1.5">
             <span
@@ -339,7 +316,6 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
         </div>
       </div>
 
-      {/* Give Up / Reveal Option while Playing */}
       {status === 'playing' && !isInitialLoading && (
         <div className="mt-3 flex items-center justify-end">
           {!confirmingGiveUp ? (
@@ -375,12 +351,9 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
         </div>
       )}
 
-      {/* End-of-Game Compact Action Bar & Revealed Identity Card */}
       {status !== 'playing' && targetPokemon && (
         <div className="mt-4 pt-3.5 border-t-2 border-slate-200 dark:border-[#24304d] space-y-3.5 animate-pop">
-          {/* Compact 3-Button Post-Game Action Bar */}
           <div className="grid grid-cols-3 gap-2">
-            {/* 1. Show Original / Show Shapes Toggle */}
             <button
               type="button"
               onClick={() => {
@@ -399,7 +372,6 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
               </span>
             </button>
 
-            {/* 2. Replay Timelapse */}
             <button
               type="button"
               onClick={handleToggleTimelapse}
@@ -422,7 +394,6 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
               )}
             </button>
 
-            {/* 3. Save Image (PNG) */}
             <button
               type="button"
               onClick={handleDownloadPng}
@@ -434,14 +405,12 @@ export const GeometrizeCanvas: React.FC<GeometrizeCanvasProps> = ({
             </button>
           </div>
 
-          {/* Revealed Pokémon Identity Card */}
           <div
             className={`rounded-2xl p-4 border-2 border-b-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-diagonal-stripes ${
               status === 'won' ? 'badge-exact' : 'badge-none'
             }`}
           >
             <div className="flex items-center gap-3.5">
-              {/* Sprite with Pokéball Backdrop + Cry Button */}
               <div className="flex flex-col items-center gap-1.5 shrink-0">
                 <div className="relative w-16 h-16 rounded-2xl bg-slate-900/95 border-2 border-white/20 p-1.5 flex items-center justify-center overflow-hidden shadow-md">
                   <svg
