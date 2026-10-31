@@ -13,7 +13,6 @@
 
   <!-- Background -->
   <rect width="1200" height="630" fill="url(#bg)" />
-  <rect width="1200" height="14" fill="url(#accent)" />
 
   <!-- Decorative Geometric Shapes -->
   <circle cx="1040" cy="150" r="110" fill="#38BDF8" opacity="0.12" />

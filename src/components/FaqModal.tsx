@@ -28,9 +28,9 @@ const FAQ_ITEMS: FaqItem[] = [
       'New daily puzzles unlock automatically at local midnight (00:00). Everyone playing the same daily puzzle number gets the exact same three target Pokémon and deterministic geometric reconstructions.',
   },
   {
-    question: 'How do Pokédex Scanner Clues work?',
+    question: 'How do Pokédex Clues work?',
     answer:
-      'As you make guesses in a mode, optional Pokédex Scanner Clues unlock to help narrow down the mystery Pokémon: the Generation clue unlocks at 3 guesses, the Primary Type clue unlocks at 5 guesses, and the Habitat clue unlocks at 7 guesses.',
+      'As you make guesses in a mode, Pokédex clues automatically reveal to help narrow down the mystery Pokémon: the Generation clue unlocks at 3 guesses, the Primary Type clue unlocks at 5 guesses, and the Habitat clue unlocks at 7 guesses.',
   },
   {
     question: 'Does playing past puzzles in the Daily Archive affect my stats or PolyDex?',
@@ -45,7 +45,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'Where is my game progress stored?',
     answer:
-      'All of your daily progress, statistics, streaks, and PolyDex catches are saved locally in your browser’s storage on your device—no account or sign-up required. Clearing your browser site data will reset your local progress.',
+      'All of your daily progress, statistics, streaks, and PolyDex catches are saved locally in your browser’s storage on your device—no account or sign-up required. You can reset your local data anytime from the Settings menu.',
   },
 ];
 
@@ -100,14 +100,14 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             aria-label="Close FAQ"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Collapsible & Expandable FAQ Accordion List */}
+        {/* Smoothly Animated Collapsible & Expandable FAQ Accordion List */}
         <div className="p-6 overflow-y-auto space-y-2.5 text-sm">
           {FAQ_ITEMS.map((item, idx) => {
             const isExpanded = openIndices.has(idx);
@@ -127,17 +127,26 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
                     <span>{item.question}</span>
                   </span>
                   <ChevronDown
-                    className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                    className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-300 ease-out ${
                       isExpanded ? 'rotate-180 text-rose-500' : ''
                     }`}
                   />
                 </button>
 
-                {isExpanded && (
-                  <div className="px-4 pb-3.5 pt-0.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300 pl-10 border-t border-slate-200/50 dark:border-slate-800/80">
-                    {item.answer}
+                {/* Animated Accordion Body using CSS Grid 0fr -> 1fr transition */}
+                <div
+                  className={`grid transition-all duration-300 ease-out ${
+                    isExpanded
+                      ? 'grid-rows-[1fr] opacity-100'
+                      : 'grid-rows-[0fr] opacity-0'
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="px-4 pb-3.5 pt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300 pl-10 border-t border-slate-200/50 dark:border-slate-800/80">
+                      {item.answer}
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             );
           })}

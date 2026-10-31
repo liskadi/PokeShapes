@@ -40,9 +40,6 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="sticky top-0 z-30 border-b-2 border-slate-300 dark:border-[#2C3E63] bg-white/95 dark:bg-[#11182B]/95 backdrop-blur-md shadow-[0_3px_0_rgba(203,213,225,0.65)] dark:shadow-[0_3px_0_rgba(30,43,71,0.85)] transition-colors">
-      {/* Pokédex Top Chassis Accent Strip */}
-      <div className="h-1.5 w-full bg-gradient-to-r from-rose-600 via-red-500 to-amber-400" />
-
       <div className="max-w-5xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
         {/* Left: Pokédex Camera Lens + Brand Title + Daily Badge */}
         <div className="flex items-center gap-2 min-w-0">

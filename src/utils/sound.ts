@@ -1,5 +1,5 @@
 /**
- * Retro Pokedex Web Audio Synthesizer & RMS Volume-Normalized Official Pokemon Cry Player.
+ * Retro Pokedex Web Audio Synthesizer & Soft Volume-Normalized Official Pokemon Cry Player.
  */
 class SoundEngine {
   private ctx: AudioContext | null = null;
@@ -35,7 +35,7 @@ class SoundEngine {
     osc.frequency.setValueAtTime(520, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(780, ctx.currentTime + 0.045);
 
-    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.setValueAtTime(0.05, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.045);
 
     osc.connect(gain);
@@ -56,7 +56,7 @@ class SoundEngine {
     osc.frequency.setValueAtTime(260, now);
     osc.frequency.setValueAtTime(210, now + 0.09);
 
-    gain.gain.setValueAtTime(0.07, now);
+    gain.gain.setValueAtTime(0.055, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
 
     osc.connect(gain);
@@ -80,7 +80,7 @@ class SoundEngine {
       osc.type = 'square';
       osc.frequency.setValueAtTime(freq, start);
 
-      gain.gain.setValueAtTime(0.065, start);
+      gain.gain.setValueAtTime(0.05, start);
       gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
 
       osc.connect(gain);
@@ -105,7 +105,7 @@ class SoundEngine {
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(freq, start);
 
-      gain.gain.setValueAtTime(0.06, start);
+      gain.gain.setValueAtTime(0.05, start);
       gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
 
       osc.connect(gain);
@@ -116,8 +116,8 @@ class SoundEngine {
   }
 
   /**
-   * Computes a normalized gain multiplier for an AudioBuffer using active-sample RMS
-   * loudness and peak limiting so quiet Pokémon cries are boosted and loud cries are tamed.
+   * Computes a gentle, ear-safe gain multiplier for a Pokémon cry so it matches
+   * the soft UI sound level and never startles the player.
    */
   private computeNormalizedGain(buffer: AudioBuffer): number {
     const channelData = buffer.getChannelData(0);
@@ -130,7 +130,6 @@ class SoundEngine {
       if (abs > peak) {
         peak = abs;
       }
-      // Ignore near-silent padding at the start/end of the audio file
       if (abs > 0.008) {
         sumSquares += abs * abs;
         activeSamples++;
@@ -138,26 +137,28 @@ class SoundEngine {
     }
 
     if (activeSamples === 0 || peak === 0) {
-      return 0.4;
+      return 0.08;
     }
 
     const rms = Math.sqrt(sumSquares / activeSamples);
-    const TARGET_RMS = 0.135;
-    const MAX_PEAK_CEILING = 0.72;
+    // Gentle target RMS and strict peak ceiling matching the soft UI sounds
+    const TARGET_RMS = 0.032;
+    const MAX_PEAK_CEILING = 0.14;
 
-    let gain = TARGET_RMS / Math.max(0.015, rms);
-    // Prevent harsh clipping if a cry has a sharp transient peak
+    let gain = TARGET_RMS / Math.max(0.02, rms);
     if (gain * peak > MAX_PEAK_CEILING) {
       gain = MAX_PEAK_CEILING / peak;
     }
 
-    // Clamp to a safe multiplier range
-    return Math.max(0.12, Math.min(2.4, gain));
+    return Math.max(0.03, Math.min(0.32, gain));
   }
 
   /**
-   * Plays the official Pokemon cry audio from PokeAPI (`cries.latest`) with
-   * Web Audio API RMS volume normalization + dynamics compression.
+   * Plays the official Pokemon cry audio from PokeAPI (`cries.latest`) with:
+   * - Soft RMS normalization & strict peak ceiling
+   * - 45ms smooth fade-in ramp (eliminates sudden startle pop)
+   * - 3.6kHz low-pass filter (tames piercing chiptune high frequencies)
+   * - Post-gain limiter/compressor
    */
   public async playPokemonCry(
     cryUrl?: string,
@@ -194,24 +195,34 @@ class SoundEngine {
         }
 
         const normalizedGain = this.computeNormalizedGain(audioBuffer);
+        const now = ctx.currentTime;
 
         const source = ctx.createBufferSource();
         source.buffer = audioBuffer;
 
-        // DynamicsCompressorNode smooths out sudden volume spikes across Gen 1-9 cries
-        const compressor = ctx.createDynamicsCompressor();
-        compressor.threshold.setValueAtTime(-20, ctx.currentTime);
-        compressor.knee.setValueAtTime(12, ctx.currentTime);
-        compressor.ratio.setValueAtTime(4, ctx.currentTime);
-        compressor.attack.setValueAtTime(0.003, ctx.currentTime);
-        compressor.release.setValueAtTime(0.15, ctx.currentTime);
+        // Low-pass filter rolls off harsh, ear-piercing chiptune frequencies above 3.6kHz
+        const lowpass = ctx.createBiquadFilter();
+        lowpass.type = 'lowpass';
+        lowpass.frequency.setValueAtTime(3600, now);
+        lowpass.Q.setValueAtTime(0.7, now);
 
+        // Gain node with a gentle 45ms fade-in ramp so it never pops or startles
         const gainNode = ctx.createGain();
-        gainNode.gain.setValueAtTime(normalizedGain, ctx.currentTime);
+        gainNode.gain.setValueAtTime(0.001, now);
+        gainNode.gain.linearRampToValueAtTime(normalizedGain, now + 0.045);
 
-        source.connect(compressor);
-        compressor.connect(gainNode);
-        gainNode.connect(ctx.destination);
+        // Brickwall dynamics compressor after gain node as a final safety ceiling
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-24, now);
+        compressor.knee.setValueAtTime(10, now);
+        compressor.ratio.setValueAtTime(12, now);
+        compressor.attack.setValueAtTime(0.002, now);
+        compressor.release.setValueAtTime(0.15, now);
+
+        source.connect(lowpass);
+        lowpass.connect(gainNode);
+        gainNode.connect(compressor);
+        compressor.connect(ctx.destination);
 
         this.activeSource = source;
         source.onended = () => {
@@ -229,7 +240,7 @@ class SoundEngine {
 
     try {
       const audio = new Audio(cryUrl);
-      audio.volume = 0.35;
+      audio.volume = 0.08;
       this.activeAudio = audio;
       audio.play().catch(() => {
         this.playClick(true);

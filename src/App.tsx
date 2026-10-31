@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   Calendar,
+  Clock,
   Coffee,
   Github,
   HelpCircle,
@@ -303,17 +304,32 @@ export function App() {
               </button>
             </div>
 
-            {/* Right: Powered by geometrize */}
-            <div className="whitespace-nowrap font-medium">
-              Powered by{' '}
-              <a
-                href="https://github.com/Tw1ddle/geometrize"
-                target="_blank"
-                rel="noreferrer"
-                className="underline hover:text-rose-500 transition-colors font-display font-bold text-slate-800 dark:text-slate-200"
+            {/* Right: Next Daily Timer + Powered by geometrize */}
+            <div className="flex flex-wrap items-center justify-center md:justify-end gap-2.5 whitespace-nowrap font-medium">
+              <span
+                className="inline-flex items-center gap-1 font-mono text-xs text-slate-500 dark:text-slate-400"
+                title="Time until the next daily PokéShapes puzzle"
               >
-                geometrize
-              </a>
+                <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                <span>Next in {countdownFormatted}</span>
+              </span>
+              <span
+                className="text-slate-300 dark:text-slate-700"
+                aria-hidden="true"
+              >
+                •
+              </span>
+              <div>
+                Powered by{' '}
+                <a
+                  href="https://github.com/Tw1ddle/geometrize"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline hover:text-rose-500 transition-colors font-display font-bold text-slate-800 dark:text-slate-200"
+                >
+                  geometrize
+                </a>
+              </div>
             </div>
           </div>
 
